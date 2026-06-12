@@ -43,16 +43,19 @@ a { color:#1a4d8a; }
 @media print { body { margin:14mm; } .noprint { display:none; } }
 """
 
-_ANALYTICS = (
+_VERCEL_OBSERVABILITY = (
     "<script>window.va = window.va || function () { "
     "(window.vaq = window.vaq || []).push(arguments); };</script>"
     "<script defer src='/_vercel/insights/script.js'></script>"
+    "<script>window.si = window.si || function () { "
+    "(window.siq = window.siq || []).push(arguments); };</script>"
+    "<script defer src='/_vercel/speed-insights/script.js'></script>"
 )
 
 
 def _head(title):
     return (f"<!doctype html><html><head><meta charset='utf-8'><title>{_e(title)}</title>"
-            f"{_ANALYTICS}<style>{_CSS}</style></head><body>"
+            f"{_VERCEL_OBSERVABILITY}<style>{_CSS}</style></head><body>"
             f"<div class='noprint' style='margin-bottom:14px'>"
             f"<button onclick='window.print()'>Print / save as PDF</button></div>")
 
