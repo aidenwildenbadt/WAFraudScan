@@ -1,0 +1,5 @@
+credential,npi,name,url,title,date,kind
+MD.MD.00044369,,Kristine Brecht,https://www.king5.com/article/news/investigations/burien-cosmetic-surgeon-loses-medical-license/281-029b2f2a-8ffb-4a01-b767-42c9fec29894,KING5 investigation: cosmetic surgeon's license suspended 5 years for unauthorized sedation surgeries,2025,news
+RN00120098,,Tracy Lynn Webster,https://nursing.wa.gov/news/2026/board-nursing-licensing-discipline-update-25-1010,"WA Board of Nursing: RN license indefinitely suspended for failing a monitoring program",2025-11,update
+,1295831659,,https://example.com/order.pdf,Example: match by NPI instead of credential,2024,order
+,,Some Provider Name,https://example.com/news,Example: match by name (can hit same-named providers; add a credential to pin),,news

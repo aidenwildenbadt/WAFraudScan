@@ -1,0 +1,19 @@
+# FraudScan
+data/*
+!data/.gitkeep
+!data/context/
+data/context/*
+!data/context/.gitkeep
+!data/registry/
+data/registry/*
+!data/registry/.gitkeep
+!data/screening/
+data/screening/*
+!data/screening/.gitkeep
+*.pyc
+__pycache__/
+.pytest_cache/
+.venv/
+.env
+.DS_Store
+.claude/

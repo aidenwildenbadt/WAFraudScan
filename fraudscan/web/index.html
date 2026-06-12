@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FraudScan — WA public-money review queue</title>
+<style>
+  :root {
+    --bg:#0f1419; --panel:#171e26; --panel2:#1e2832; --line:#2a3744;
+    --txt:#e6edf3; --muted:#8b9bab; --accent:#4ea1ff;
+    --s1:#3fb950; --s2:#d29922; --s3:#f0883e; --s4:#f85149;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--txt);
+    font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+  header { padding:18px 24px; border-bottom:1px solid var(--line); }
+  h1 { margin:0; font-size:20px; letter-spacing:.3px; }
+  h1 span { color:var(--accent); }
+  .sub { color:var(--muted); font-size:12px; margin-top:2px; }
+  .disclaimer { background:#3a2a12; border:1px solid #7a5a1e; color:#ffd789;
+    padding:8px 14px; border-radius:6px; margin:14px 24px; font-size:12.5px; }
+  .wrap { padding:0 24px 60px; }
+  .cards { display:flex; gap:14px; flex-wrap:wrap; margin:16px 0; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:8px;
+    padding:14px 18px; min-width:150px; }
+  .card .n { font-size:26px; font-weight:600; }
+  .card .l { color:var(--muted); font-size:12px; text-transform:uppercase;
+    letter-spacing:.5px; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:18px; }
+  .box { background:var(--panel); border:1px solid var(--line); border-radius:8px;
+    padding:14px 18px; }
+  .box h3 { margin:0 0 10px; font-size:13px; color:var(--muted);
+    text-transform:uppercase; letter-spacing:.5px; }
+  .bar { display:flex; align-items:center; gap:8px; margin:5px 0; font-size:12.5px; }
+  .bar .track { flex:1; background:var(--panel2); border-radius:4px; height:16px;
+    overflow:hidden; }
+  .bar .fill { display:block; height:100%; min-width:2px; background:var(--accent);
+    border-radius:4px; }
+  .bar .lab { width:auto; color:var(--muted); }
+  .bar .val { width:46px; text-align:right; color:var(--muted); }
+  .why { border-bottom:1px dotted var(--muted); cursor:help; }
+  thead th { position:sticky; top:0; background:var(--panel); z-index:2; }
+  td { font-variant-numeric: tabular-nums; }
+  tbody tr { transition: background .08s; }
+  tbody tr:hover td { background:#1c2733; }
+  .omni-it { padding:8px 12px; cursor:pointer; font-size:13px;
+    border-bottom:1px solid var(--line); }
+  .omni-it:hover { background:var(--panel2); }
+  @media print { header div:last-child, .filters, .tabs, .chips, .disclaimer
+    { display:none !important; } body { background:#fff; color:#000; } }
+  tr.selrow td { background:#21304a !important; box-shadow:inset 3px 0 0 var(--accent); }
+  .tribtn { background:var(--panel2); border:1px solid var(--line); color:var(--txt);
+    border-radius:6px; padding:6px 12px; cursor:pointer; font-size:12.5px; }
+  .tribtn:hover { border-color:var(--accent); }
+  .tribtn.on { border-color:var(--accent); color:var(--accent); font-weight:600; }
+  .filters { display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+    margin:8px 0 14px; }
+  select, input { background:var(--panel2); border:1px solid var(--line);
+    color:var(--txt); padding:7px 10px; border-radius:6px; font-size:13px; }
+  input[type=search] { min-width:240px; }
+  table { width:100%; border-collapse:collapse; background:var(--panel);
+    border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+  th, td { text-align:left; padding:9px 12px; border-bottom:1px solid var(--line);
+    font-size:13px; vertical-align:top; }
+  th { color:var(--muted); font-weight:600; text-transform:uppercase;
+    font-size:11px; letter-spacing:.5px; cursor:default; }
+  tbody tr:hover { background:var(--panel2); cursor:pointer; }
+  .score { font-weight:700; padding:2px 8px; border-radius:20px; color:#0b0e12;
+    display:inline-block; min-width:34px; text-align:center; }
+  .reasons { color:var(--muted); font-size:12px; }
+  .pill { display:inline-block; background:var(--panel2); border:1px solid var(--line);
+    border-radius:20px; padding:1px 8px; font-size:11px; color:var(--muted);
+    margin:1px 3px 1px 0; }
+  .tabs { display:flex; gap:4px; margin:18px 0 4px; border-bottom:1px solid var(--line); }
+  .tab { background:none; border:none; color:var(--muted); padding:9px 16px;
+    cursor:pointer; font-size:13px; border-bottom:2px solid transparent; }
+  .tab.active { color:var(--txt); border-bottom-color:var(--accent); font-weight:600; }
+  .src-childcare { color:#4ea1ff; } .src-contracts { color:#d29922; }
+  .src-healthcare { color:#f0883e; }
+  .fundwrap { display:flex; gap:22px; align-items:center; flex-wrap:wrap; }
+  .pie { width:190px; height:190px; border-radius:50%; flex:none;
+    -webkit-mask:radial-gradient(circle, transparent 54%, #000 55%);
+    mask:radial-gradient(circle, transparent 54%, #000 55%); }
+  .legend { flex:1; min-width:240px; }
+  .leg { margin:5px 0; font-size:13px; }
+  .sw { display:inline-block; width:12px; height:12px; border-radius:2px;
+    vertical-align:middle; margin-right:7px; }
+  .opbadge { display:inline-block; border:1px solid var(--accent); color:var(--accent);
+    border-radius:20px; padding:1px 8px; font-size:11px; cursor:pointer;
+    white-space:nowrap; margin-right:6px; }
+  .opbadge:hover { background:rgba(78,161,255,.12); }
+  /* modal */
+  .overlay { position:fixed; inset:0; background:rgba(0,0,0,.6); display:none;
+    align-items:flex-start; justify-content:center; padding:40px 16px; overflow:auto;
+    z-index:100; }   /* must beat sticky table headers (z-index:2) */
+  .overlay.open { display:flex; }
+  .modal { background:var(--panel); border:1px solid var(--line); border-radius:10px;
+    max-width:760px; width:100%; padding:22px 26px; }
+  .modal h2 { margin:0 0 2px; font-size:19px; }
+  .modal .meta { color:var(--muted); font-size:13px; margin-bottom:14px; }
+  .flagcard { background:var(--panel2); border:1px solid var(--line);
+    border-left:4px solid var(--s3); border-radius:6px; padding:10px 14px;
+    margin-bottom:10px; }
+  .flagcard .ft { font-weight:600; }
+  .flagcard .fe { color:var(--muted); font-size:12px; margin-top:4px; }
+  .flagcard .sev { float:right; color:var(--muted); font-size:12px; }
+  .dossier { border:1px solid var(--accent); border-left-width:4px; border-radius:8px;
+    background:var(--panel2); padding:14px 16px; margin:0 0 16px; }
+  .dhead { font-weight:700; font-size:15px; margin-bottom:12px; }
+  .dstep { display:flex; gap:10px; margin-bottom:10px; }
+  .dnum { flex:0 0 22px; height:22px; border-radius:50%; color:#0b0f14;
+    font-weight:700; font-size:12px; display:flex; align-items:center;
+    justify-content:center; }
+  .dlab { font-weight:600; font-size:13px; }
+  .dstr { font-size:11px; text-transform:uppercase; font-weight:600; margin-left:6px; }
+  .ddet { color:#c9d4df; font-size:12.5px; margin-top:2px; }
+  .dtl { margin-top:4px; display:flex; flex-wrap:wrap; gap:8px; }
+  .dtl span { background:var(--panel); border:1px solid var(--line); border-radius:4px;
+    padding:1px 7px; font-size:11px; color:var(--muted); }
+  .dcrwrap { display:flex; gap:18px; flex-wrap:wrap; margin-top:8px;
+    border-top:1px solid var(--line); padding-top:8px; }
+  .dcr { flex:1 1 240px; }
+  .dcr b { font-size:11px; text-transform:uppercase; }
+  .dcr ul { margin:4px 0 0; padding-left:16px; }
+  .dcr li { color:var(--muted); font-size:12px; margin-bottom:3px; }
+  .achip { display:inline-block; border:1px solid; border-radius:10px; padding:1px 8px;
+    font-size:11px; margin:2px 4px 0 0; }
+  .chips { display:flex; gap:6px; flex-wrap:wrap; }
+  .chip { background:var(--panel2); border:1px solid var(--line); color:var(--muted);
+    border-radius:14px; padding:3px 11px; font-size:12px; cursor:pointer; }
+  .chip:hover { color:var(--txt); }
+  .chip.active { background:#11283a; border-color:#2a5a8a; color:#bcd8f5; }
+  .ybars { display:flex; gap:18px; align-items:flex-end; padding:14px 6px 0;
+    min-height:190px; }
+  .ybar { display:flex; flex-direction:column; align-items:center; justify-content:flex-end;
+    flex:1; max-width:90px; }
+  .yfill { width:46px; background:linear-gradient(var(--s1),var(--accent));
+    border-radius:4px 4px 0 0; }
+  .yval { font-size:11px; color:var(--muted); margin-bottom:4px; }
+  .ylab { font-size:12px; margin-top:6px; color:var(--text); font-weight:600; }
+  a { color:var(--accent); }
+  .close { float:right; cursor:pointer; color:var(--muted); font-size:20px;
+    line-height:1; }
+  .empty { color:var(--muted); padding:30px; text-align:center; }
+  kbd { background:var(--panel2); border:1px solid var(--line); border-radius:4px;
+    padding:1px 5px; font-size:11px; }
+</style>
+</head>
+<body>
+<header style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">
+  <div>
+    <h1>Fraud<span>Scan</span> &middot; Washington public-money review queue</h1>
+    <div class="sub">Anomaly leads from public records on data.wa.gov &mdash; ranked for human review.</div>
+  </div>
+  <div style="margin-left:auto;display:flex;gap:8px;align-items:center;position:relative">
+    <input id="omni" type="search" placeholder="find anything — name, NPI, UBI, credential…"
+      style="width:300px;background:var(--panel2);border:1px solid var(--line);
+      color:var(--txt);border-radius:8px;padding:8px 12px;font-size:13px" autocomplete="off">
+    <button class="tribtn" onclick="rouletteLead()"
+      title="open a random mid-tier untriaged lead — the unexamined middle is where true positives hide">🎲</button>
+    <div id="omni-drop" style="display:none;position:absolute;top:40px;left:0;right:44px;
+      background:var(--panel);border:1px solid var(--line);border-radius:8px;z-index:40;
+      max-height:340px;overflow:auto;box-shadow:0 8px 24px rgba(0,0,0,.5)"></div>
+  </div>
+</header>
+
+<div class="disclaimer">
+  <b>These are investigative leads, not findings of fraud.</b> A high score means a
+  record is statistically unusual and worth a closer look &mdash; it is not evidence of
+  wrongdoing. Verify every lead against the linked source record before acting.
+</div>
+
+<div class="wrap">
+  <div class="cards" id="cards"></div>
+  <div id="whatsnew"></div>
+
+  <div class="grid">
+    <div class="box"><h3>Record risk distribution <span style="text-transform:none;
+      font-weight:400;color:var(--muted)">· individual records; operator scores are on
+      the Operators tab · bar length √-scaled, exact count shown</span></h3>
+      <div id="dist"></div></div>
+    <div class="box"><h3>Most common flags <span style="text-transform:none;
+      font-weight:400;color:var(--muted)">· bar √-scaled</span></h3>
+      <div id="toprules"></div></div>
+  </div>
+
+  <div class="tabs">
+    <button id="tab-entities" class="tab active" onclick="showTab('entities')">Review queue</button>
+    <button id="tab-operators" class="tab" onclick="showTab('operators')">Operators · cross-source</button>
+    <button id="tab-funding" class="tab" onclick="showTab('funding')">Funding</button>
+  </div>
+
+  <div id="view-entities">
+  <div class="filters">
+    <select id="f-source"><option value="">All sources</option></select>
+    <select id="f-rule"><option value="">All flag types</option></select>
+    <select id="f-triage">
+      <option value="">All triage states</option>
+      <option value="untriaged">Untriaged</option>
+      <option value="escalated">⚑ Escalated</option>
+      <option value="reviewed">✓ Reviewed</option>
+      <option value="dismissed">✕ Dismissed</option>
+      <option value="watched">★ Watched</option>
+    </select>
+    <select id="f-sort">
+      <option value="score">Sort: risk score</option>
+      <option value="grade">Sort: evidence grade</option>
+      <option value="after">Sort: $ after bar</option>
+      <option value="funds">Sort: total $</option>
+    </select>
+    <label style="color:var(--muted);font-size:12px">min score
+      <input id="f-min" type="number" min="0" max="100" value="0" style="width:70px">
+    </label>
+    <input id="f-q" type="search" placeholder="search name, city, address…">
+    <label style="color:var(--muted);font-size:12px"><input type="checkbox" id="f-op">
+      in an operator</label>
+    <span id="county-chip"></span>
+    <span id="triage-stats" class="reasons" style="margin-left:auto"></span>
+  </div>
+  <div class="reasons" style="margin:0 2px 8px">Keys: <b>j/k</b> move · <b>Enter</b> open ·
+    <b>e</b> escalate · <b>r</b> reviewed · <b>d</b> dismiss · <b>u</b> untriage ·
+    <b>w</b> watch</div>
+
+  <table>
+    <thead><tr>
+      <th>#</th><th>Provider / vendor</th><th>Type</th><th>Location</th>
+      <th>Source</th><th>Score</th>
+      <th><span class="why" title="Evidence grade — how defensible the lead is:
+A = dated contradiction + confirmed identity + recent $
+B = contradiction or sanctioned+paid with confirmed identity
+C = sanctioned+paid (identity unconfirmed) or strong single signal with $
+D = correlational signals only. Risk score says LOOK HERE; grade says HOW FAR IT HOLDS.">Ev.</span></th>
+      <th>Flags</th><th>Top reasons</th>
+    </tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <div id="empty" class="empty" style="display:none">No matching records.</div>
+  </div><!-- /view-entities -->
+
+  <div id="view-operators" style="display:none">
+    <div class="filters">
+      <select id="o-min">
+        <option value="1">All operators</option>
+        <option value="2">2+ programs</option>
+        <option value="3">3+ programs</option>
+      </select>
+      <select id="o-sort">
+        <option value="score">Sort: risk</option>
+        <option value="stake">Sort: $ at stake</option>
+        <option value="barred">Sort: barred members</option>
+      </select>
+      <input id="o-q" type="search" placeholder="search operator name…">
+    </div>
+    <div class="filters" style="margin-top:-4px">
+      <span class="chips" id="o-chips">
+        <button class="chip active" data-f="">All</button>
+        <button class="chip" data-f="barred">⚠ barred member</button>
+        <button class="chip" data-f="contradiction">paid-after-barred</button>
+        <button class="chip" data-f="cross">cross-program</button>
+        <button class="chip" data-f="hard">hard link (owner/UBI)</button>
+        <button class="chip" data-f="soft">soft link only</button>
+      </span>
+    </div>
+    <div id="ops-stale" style="display:none;border:1px solid var(--s2);color:var(--s2);
+      border-radius:8px;padding:8px 12px;margin:4px 2px 10px;font-size:13px">
+      ⚠ Operator clusters were built <b>before the latest re-score</b> — member scores
+      and signals here may lag. Run <code>python3 -m fraudscan resolve</code> to refresh.
+    </div>
+    <div class="reasons" style="margin:4px 2px 10px">An operator = records that resolve to
+      one entity. <b>Score</b> = worst member + structured bonuses (not a sum); rank leads
+      with a <b>barred member</b> or a <b>verifiable contradiction</b> first. Leads to
+      verify — links can collide.</div>
+    <table>
+      <thead><tr><th>#</th><th>Operator</th><th>Programs</th><th>Members</th>
+        <th>Score</th><th>Risk &amp; why linked</th></tr></thead>
+      <tbody id="o-rows"></tbody>
+    </table>
+    <div id="o-empty" class="empty" style="display:none">No operators match.</div>
+  </div><!-- /view-operators -->
+
+  <div id="view-funding" style="display:none">
+    <div class="disclaimer" style="margin:6px 0 14px">
+      These are the public dollars we can <b>see</b> flowing to flagged providers/operators,
+      grouped by the <b>strongest risk signal</b> on each — <b>leads to verify, not
+      confirmed fraud</b>. The "verifiable contradiction" slice (paid after being barred)
+      is the closest to provable. Most dollars are ordinary contracts to legitimate vendors.
+    </div>
+    <div id="fund-coverage" class="reasons" style="margin:0 0 12px"></div>
+    <div class="box" style="margin:0 0 14px"><h3>Scope — what this dashboard sees, and
+      what it doesn't <span style="text-transform:none;font-weight:400;
+      color:var(--muted)">· read this before the charts</span></h3>
+      <div id="fund-scope" class="reasons" style="line-height:1.6"></div></div>
+    <div class="grid">
+      <div class="box"><h3>Where the surfaced $ comes from · by program
+        <span style="text-transform:none;font-weight:400;color:var(--muted)">·
+        only dollars this scan attributed to the WA providers/vendors it examined —
+        NOT a map of all government spending · each line shows the years it covers</span></h3>
+        <div id="fund-program" class="fundwrap"></div></div>
+      <div class="box"><h3>Surfaced provider $ by risk signal
+        <span style="text-transform:none;font-weight:400;color:var(--muted)">·
+        Medicare + Medicaid + WA state dollars to the providers scanned here, grouped by
+        each provider's strongest flag · leads, not verdicts · contracts excluded
+        (procurement)</span></h3>
+        <div id="fund-risk" class="fundwrap"></div></div>
+    </div>
+    <div class="grid" style="margin-top:14px">
+      <div class="box"><h3>Surfaced provider $ by calendar year
+        <span style="text-transform:none;font-weight:400;color:var(--muted)">·
+        Medicare (Part B/D/DME) + Medicaid (T-MSIS) to providers scanned here · CMS
+        publishes ~18 months behind, so the latest full year is the newest that EXISTS
+        publicly</span></h3>
+        <div id="fund-year"></div></div>
+      <div class="box"><h3>Surfaced WA state $ by fiscal year
+        <span style="text-transform:none;font-weight:400;color:var(--muted)">·
+        Open Checkbook actual disbursements to providers scanned here · FY runs Jul–Jun
+        (FY2026 = Jul 2025–Jun 2026, updated monthly — the freshest money data
+        here)</span></h3>
+        <div id="fund-fy"></div></div>
+    </div>
+    <div class="grid" style="margin-top:14px">
+      <div class="box"><h3>Fastest-growing surfaced provider $
+        <span style="text-transform:none;font-weight:400;color:var(--muted)">·
+        among providers scanned here · latest year ≥1.6× prior · momentum is itself a
+        billing signal — and also just growth; click to inspect</span></h3>
+        <div id="movers"></div></div>
+      <div class="box"><h3>Data health
+        <span style="text-transform:none;font-weight:400;color:var(--muted)">·
+        what's loaded, how fresh</span></h3>
+        <div id="datahealth"></div></div>
+    </div>
+    <div class="box" style="margin-top:14px"><h3>Flag density by county
+      <span style="text-transform:none;font-weight:400;color:var(--muted)">·
+      tile map (position ≈ geography) · color = high-risk records · click a county to
+      filter the review queue · only sources that publish a county are counted</span></h3>
+      <div id="county-map"></div></div>
+  </div><!-- /view-funding -->
+</div>
+
+<div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => (s==null?"":String(s)).replace(/[&<>"]/g,
+  c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function scoreColor(v){ return v>=80?"var(--s4)":v>=60?"var(--s3)":v>=40?"var(--s2)":"var(--s1)"; }
+function fmtMoney(v){ v=+v||0; if(v>=1e9)return "$"+(v/1e9).toFixed(2)+"B";
+  if(v>=1e6)return "$"+(v/1e6).toFixed(1)+"M"; if(v>=1e3)return "$"+(v/1e3).toFixed(0)+"K";
+  return "$"+v.toFixed(0); }
+let debounce;
+
+function storyGo(kind){
+  if(kind==="after"){ showTab("entities"); $("#f-rule").value="paid_after_barred";
+    $("#f-sort").value="after"; $("#f-triage").value=""; loadFlags(); }
+  else if(kind==="fy"){ showTab("funding"); }
+  else if(kind==="complaints"){ showTab("entities");
+    $("#f-rule").value="childcare_valid_complaint"; $("#f-sort").value="score"; loadFlags(); }
+  else if(kind==="untriaged"){ showTab("entities"); $("#f-triage").value="untriaged";
+    $("#f-min").value=40; $("#f-rule").value=""; loadFlags(); }
+}
+async function loadSummary(){
+  const s = await (await fetch("/api/summary")).json();
+  if($("#datahealth")) loadDataHealth(s);
+  if(s.operators_stale && $("#ops-stale")) $("#ops-stale").style.display="block";
+  const st=s.stories||{};
+  const cards=[
+    ["WA provider/vendor records scanned (targeted categories, not all of WA)",
+     (s.total_entities||0).toLocaleString(),"","",""],
+    ["public $ surfaced to scanned entities — mostly multi-year contract value; see Funding → Scope",
+     fmtMoney(s.total_funds),"","",""]];
+  if(st.after_bar&&st.after_bar.n) cards.push(
+    [`paid AFTER being barred · ${st.after_bar.n} providers — the verifiable-contradiction slice`,
+     fmtMoney(st.after_bar.amount),"var(--s4)","after","▲ "]);
+  if(st.fy_now&&st.fy_now.amt) cards.push(
+    [`WA state $ flowing now (${esc(st.fy_now.period)}, updated monthly)`,
+     fmtMoney(st.fy_now.amt),"var(--s1)","fy",""]);
+  if(st.complaints) cards.push(
+    [`substantiated childcare complaint(s) — rare, high-signal`,
+     st.complaints.toLocaleString(),"#f0883e","complaints",""]);
+  if(st.untriaged_high) cards.push(
+    [`high-risk leads (score ≥40) not yet triaged`,
+     st.untriaged_high.toLocaleString(),"var(--accent)","untriaged",""]);
+  $("#cards").innerHTML = cards.map(([l,v,col,go,pre]) =>
+    `<div class="card" ${go?`onclick="storyGo('${go}')" style="cursor:pointer;border-color:${col}"`:""}>
+      <div class="n" ${col?`style="color:${col}"`:""}>${pre||""}${v}</div>
+      <div class="l">${l}</div></div>`).join("");
+
+  const tri=s.triage||{};
+  const done=(tri.reviewed||0)+(tri.dismissed||0)+(tri.escalated||0);
+  $("#triage-stats").innerHTML = done||tri.watched ?
+    `<b>${done.toLocaleString()}</b> triaged · ⚑ ${tri.escalated||0} escalated · ` +
+    `★ ${tri.watched||0} watched` : "";
+
+  const src = $("#f-source");
+  if (src.options.length<=1)             // summary reloads after triage — fill once
+    Object.keys(s.entities_by_source||{}).forEach(k=>{
+      src.insertAdjacentHTML("beforeend",`<option value="${k}">${k}</option>`); });
+
+  const rsel = $("#f-rule");
+  if (rsel.options.length<=1)
+    (s.top_rules||[]).forEach(r=>{
+      rsel.insertAdjacentHTML("beforeend",
+        `<option value="${r.rule_id}">${r.rule_id} (${r.n})</option>`); });
+
+  // counts span 40 → 17k, so a LINEAR bar buries every bucket but the biggest.
+  // √-scale keeps the ordering + rough magnitude while making small buckets visible
+  // (the exact count is always shown alongside, so the bar is just a visual aid).
+  const barW=(n,max)=> n>0 ? Math.max(2, 100*Math.sqrt(n)/Math.sqrt(max)) : 0;
+  const order=["80-100","60-79","40-59","20-39","0-19"];
+  const bmap=Object.fromEntries((s.score_buckets||[]).map(b=>[b.bucket,b.n]));
+  const max=Math.max(1,...Object.values(bmap));
+  $("#dist").innerHTML = order.map(b=>{
+    const n=bmap[b]||0, col=b>="80"?"var(--s4)":b.startsWith("60")?"var(--s3)":
+      b.startsWith("40")?"var(--s2)":"var(--s1)";
+    return `<div class="bar"><span class="lab" style="width:54px">${b}</span>
+      <span class="track"><span class="fill" style="width:${barW(n,max)}%;
+      background:${col}"></span></span><span class="val">${n}</span></div>`;}).join("");
+
+  const rmax=Math.max(1,...(s.top_rules||[]).map(r=>r.n));
+  $("#toprules").innerHTML=(s.top_rules||[]).slice(0,12).map(r=>
+    `<div class="bar"><span class="track"><span class="fill"
+      style="width:${barW(r.n,rmax)}%"></span></span>
+      <span class="val">${r.n}</span>
+      <span class="lab">${esc(r.rule_id)}</span></div>`).join("");
+}
+
+// plain-English "why is this concerning?" per flag title — shown on hover so every
+// reason in the queue explains itself. Matched by substring, most specific first.
+const WHY=[
+  ["Payments predate the sanction","All held dollars are dated BEFORE the bar — the enforcement system working, not a live lead. When coverage extends past the bar with $0 observed, that is affirmative cessation evidence."],
+  ["license-derived","A 1128(b)(4)/(b)(5) exclusion restates a state license action already counted — scored once with it, not stacked on top."],
+  ["AFTER being barred","Dated payments land strictly AFTER the exclusion/bar date — a checkable contradiction between two official records. Strongest lead type; verify identity + remittance dates."],
+  ["NPI was deactivated","A deactivated NPI (death, retirement, dissolution, CMS action) cannot lawfully bill — payments dated after deactivation are a hard contradiction. Verify in NPPES; year-granular, so same-year payments are never counted."],
+  ["WA HCA terminated","Washington's own Medicaid program terminated this provider for cause — the state-level analog of a federal exclusion, matched by license #/NPI from HCA's published list."],
+  ["DURING debarment","An agency contract whose dates overlap an L&I public-works debarment window — debarred contractors may not work public contracts. Verify the UBI identifies the same company; then it's a dated contradiction."],
+  ["debarred contractors list","L&I debarred this contractor from public works (prevailing-wage / registration / industrial-insurance violations). Name-matched — verify the UBI before relying on it."],
+  ["strike list","An L&I violation strike (two within 3 years → debarment) — context about compliance history, not a bar."],
+  ["while credential is sanctioned","Public money flowed in the same era the license carried an adverse action. Timing overlap is not proof — confirm the payment dates against the action dates."],
+  ["while credential was sanctioned","Historical overlap: the money is YEARS old (see the last-payment year) — a records/recovery question, not active leakage."],
+  ["Medicaid termination list","Washington's own Medicaid program terminated this provider — a STATE action; it does not by itself bar Medicare or other federal programs."],
+  ["exclusion/sanction list","Listed by OIG (LEIE), SAM.gov, or CMS as excluded from federal programs — billing public programs while listed is generally prohibited; confirm it is the same person (NPI/DOB/license)."],
+  ["revoked or suspended","The state found conduct serious enough to pull or pause the license — the underlying order says why (link in dossier)."],
+  ["surrendered","Credentials are often surrendered in lieu of discipline mid-investigation — read the surrender order for what was alleged."],
+  ["Disciplinary action pending","An open case — the conduct is unresolved; check the DOH record before drawing conclusions."],
+  ["Disciplinary action on record","A completed enforcement action exists — severity varies from fines to practice limits; the order has the detail."],
+  ["payment increase","Year-over-year billing jumped far beyond peers — can be legitimate growth (new clinic, expanded service); anomalous, not damning."],
+  ["payment outlier","Total $ is far above same-type peers — scale alone isn't fraud; check the service mix."],
+  ["Single billing code dominance","Nearly all revenue rides one procedure code — a known upcoding/churn pattern, but also normal for narrow specialties."],
+  ["services per day","Implied daily service volume is implausibly high — a classic phantom-billing screen; verify against practice size."],
+  ["Valid complaint","DCYF substantiated a complaint — rare across WA childcare (~1 in 2,500), so it carries real signal; read the case on Child Care Check."],
+  ["licensing inspections","More inspections than typical usually means follow-up monitoring after issues — context, not an accusation."],
+  ["Contact info shared","The same person/email runs several separately-registered providers — the high-risk version is DIFFERENTLY-branded sites (hidden common control). Same-brand chains (e.g. 'MARTHA & MARY <site>') are open about it and auto-discounted to ~1/3 severity."],
+  ["one address","Multiple differently-named registrations at one address can be shells layered on one site — but usually aren't: open-brand HQ+branches and programs hosted AT a venue (school/community center/church) are auto-recognized and not scored. What remains — 2+ unrelated brands at one address — is the actual shell pattern."],
+  ["state contractor","Being both a provider and a state contractor is NORMAL (ECEAP/Head Start work by design) — it's shown as money context. It only adds score when the operator also has a barred/sanctioned member (cross-program movement after sanctions is the fraud pattern)."],
+  ["high licensed capacity","Licensed far above same-type average — capacity itself is the billing ceiling for subsidy; pairs with the records-request check (paid vs attendance)."],
+  ["contact person across many","One named contact across many facilities concentrates control — meaningful only with other flags, and auto-discounted when the facilities all share one open brand (a disclosed chain, not hidden control)."],
+  ["business registration","No active SOS registration while operating/receiving funds — sometimes a filing lapse, sometimes a shell."],
+  ["Ownership churn","Facility changed hands recently — churn is how bad actors shed enforcement history (CHOW evasion)."],
+  ["Shared owner","Same beneficial owner across facilities — risk travels with the owner, not the building."],
+  ["jeopardy","Surveyors cited immediate-jeopardy-level deficiencies — the most serious inspection finding that exists."],
+  ["fines","CMS fined the facility — enforcement already concluded something was wrong."],
+  ["duplicate amount","Identical contract amounts to one vendor can be split-billing to stay under approval thresholds — or routine renewals."],
+  ["round large amount","Large perfectly-round contract amounts correlate with weak cost justification — weak signal on its own."],
+  ["Misspelled","Sloppy or near-miss naming is a weak shell-company tell — only meaningful stacked with other flags."],
+  ["license","License/credential state doesn't match operation — check the registry record linked in the dossier."],
+];
+function whyFor(t){const x=(t||"").toLowerCase();for(const [k,w] of WHY){if(x.includes(k.toLowerCase()))return w;}return "Why it matters: statistically unusual vs peers — a lead to verify against the source record, not a finding.";}
+
+const GRADE_COLOR={A:"#f85149",B:"#f0883e",C:"#d29922",D:"#566573"};
+function sparkSVG(spark){
+  if(!spark||spark.length<2) return "";
+  const w=58,h=15,max=Math.max(...spark.map(s=>s[1]))||1,bw=Math.max(3,w/spark.length-2);
+  const bars=spark.map((s,i)=>{
+    const bh=Math.max(1.5,s[1]/max*(h-2));
+    return `<rect x="${(i*(w/spark.length)).toFixed(1)}" y="${(h-bh).toFixed(1)}"
+      width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" rx="1" fill="var(--s1)"
+      opacity="0.85"><title>${s[0]}: ${fmtMoney(s[1])}</title></rect>`;}).join("");
+  return `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}"
+    style="vertical-align:middle;margin:0 4px" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="$ by year">${bars}</svg>`;
+}
+const TRI_CHIP={escalated:["⚑ escalated","#f0883e"],reviewed:["✓ reviewed","var(--muted)"],
+  dismissed:["✕ dismissed","#566573"]};
+function triChip(r){
+  let out="";
+  if(r.watched) out+=`<span class="opbadge" style="border-color:#d6a435;color:#d6a435"
+    title="on your watchlist">★</span>`;
+  const t=TRI_CHIP[r.triage_state];
+  if(t) out+=`<span class="opbadge" style="border-color:${t[1]};color:${t[1]}"
+    title="${esc(r.triage_note||'')}">${t[0]}</span>`;
+  return out;
+}
+let _qRows=[], _qSel=-1;
+async function loadFlags(){
+  const p=new URLSearchParams({
+    source:$("#f-source").value, rule:$("#f-rule").value,
+    min_score:$("#f-min").value||0, q:$("#f-q").value, limit:300,
+    in_operator:$("#f-op").checked?"1":"", triage:$("#f-triage").value,
+    sort:$("#f-sort").value, county:_county});
+  $("#county-chip").innerHTML=_county?`<span class="opbadge"
+    style="border-color:var(--accent);color:var(--accent);cursor:pointer"
+    onclick="_county='';loadFlags()" title="click to clear">county: ${_county} ✕</span>`:"";
+  syncHash();
+  const d=await (await fetch("/api/flags?"+p)).json();
+  const rows=d.results||[];
+  _qRows=rows; _qSel=-1;
+  $("#empty").style.display=rows.length?"none":"block";
+  $("#rows").innerHTML=rows.map((r,i)=>`
+    <tr id="qrow-${i}" onclick="openEntity('${encodeURIComponent(r.uid)}')"
+      style="${r.triage_state==='dismissed'?'opacity:.45':''}">
+      <td>${i+1}</td>
+      <td><b>${esc(r.name||"(unnamed)")}</b>${r.dba&&r.dba!==r.name?
+        `<div class="reasons">dba ${esc(r.dba)}</div>`:""}</td>
+      <td>${esc(r.entity_type||"")}</td>
+      <td>${esc([r.city,r.county].filter(Boolean).join(", "))}</td>
+      <td><span class="pill">${esc(r.source)}</span></td>
+      <td><span class="score" style="background:${scoreColor(r.risk_score)}">
+        ${r.risk_score}</span></td>
+      <td><span class="score why" style="background:${GRADE_COLOR[r.grade]||'var(--muted)'};
+        font-weight:800" title="${esc(r.grade_why||'')}">${r.grade||"?"}</span></td>
+      <td>${r.flag_count}</td>
+      <td class="reasons">${triChip(r)}${r.funds_after>0?`<span class="opbadge"
+        style="border-color:var(--s4);color:var(--s4);font-weight:700"
+        title="dollars dated strictly AFTER this provider was barred/excluded — the
+verifiable-contradiction slice of the total">▲ ${fmtMoney(r.funds_after)} after bar</span>`:""}${
+        r.funds?`<span class="opbadge"
+        style="border-color:var(--s1);color:var(--s1)"
+        title="total public $ surfaced for this provider${r.funds_range?` (paid ${r.funds_range})`:''}">${fmtMoney(r.funds)}${
+        r.funds_range?` <span style="opacity:.65;font-weight:400">· ${r.funds_range}</span>`:""}</span>`:""}${
+        sparkSVG(r.spark)}${
+        r.operator_id?`<span class="opbadge" title="${esc(r.operator_name||'')}"
+        onclick="event.stopPropagation();openOperator('${r.operator_id}')">⛓ operator${
+        r.operator_members?(" · "+r.operator_members):""}</span>`:""}${
+        (r.flag_titles||[]).map(t=>`<span class="why" title="${esc(whyFor(t))}">${esc(t)}</span>`).join(" · ")}</td>
+    </tr>`).join("");
+}
+
+const STR_COLOR={high:"var(--s1)","verifiable contradiction":"var(--s1)",
+  medium:"#d6a435","sanctioned + paid":"#d6a435",low:"#c0606a","on exclusion list":"#d6a435",
+  payments:"var(--muted)"};
+function renderDossier(d){
+  if(!d) return "";
+  const sc=STR_COLOR[d.strength]||"var(--accent)";
+  const steps=(d.steps||[]).map(s=>`
+    <div class="dstep">
+      <span class="dnum" style="background:${STR_COLOR[s.strength]||'var(--muted)'}">${s.n}</span>
+      <div><div class="dlab">${esc(s.label)} <span class="dstr"
+        style="color:${STR_COLOR[s.strength]||'var(--muted)'}">${esc(s.strength||"")}</span></div>
+        <div class="ddet">${esc(s.detail)}${s.source_url?
+          ` <a href="${esc(s.source_url)}" target="_blank" rel="noopener">↗ source</a>`:""}</div>
+        ${(s.timeline&&s.timeline.length>1)?`<div class="dtl">${s.timeline.map(t=>
+          `<span>${esc(t.period)}: ${fmtMoney(t.amount)}</span>`).join("")}</div>`:""}
+      </div></div>`).join("");
+  const cr=(arr,lab,col)=>arr&&arr.length?`<div class="dcr"><b style="color:${col}">${lab}</b>
+    <ul>${arr.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:"";
+  return `<div class="dossier" style="border-color:${sc}">
+    <div class="dhead" style="color:${sc}">📋 ${esc(d.headline)}</div>
+    ${steps}
+    <div class="dcrwrap">${cr(d.confirm,"✓ Confirms if","var(--s1)")}
+      ${cr(d.refute,"✗ Refutes if","#c0606a")}</div>
+  </div>`;
+}
+
+const CTX_KIND={order:["⚖","#d6a435"],news:["📰","#4ea1ff"],update:["🔔","var(--s1)"]};
+function renderContext(e){
+  const items=e.context||[], links=e.context_links||[];
+  if(!items.length && !links.length) return "";
+  const rows=items.map(it=>{
+    const k=CTX_KIND[it.kind]||["•","var(--muted)"];
+    return `<div class="flagcard" style="border-left-color:${k[1]}">
+      <div class="ft"><span style="color:${k[1]}">${k[0]}</span> ${esc(it.title||it.url)}${
+        it.date?` <span class="reasons">· ${esc(it.date)}</span>`:""}${
+        it.matched_via?` <span class="reasons">· matched by ${esc(it.matched_via)}</span>`:""}</div>
+      <div class="fe"><a href="${esc(it.url)}" target="_blank" rel="noopener">↗ ${esc(it.url)}</a></div>
+    </div>`;}).join("");
+  const lk=links.map(l=>`<a href="${esc(l.url)}" target="_blank" rel="noopener"
+    class="achip" style="border-color:#2a5a8a;color:#9cc4ef;cursor:pointer">↗ ${esc(l.label)}</a>`).join(" ");
+  return `<h3 style="color:var(--muted);font-size:12px;text-transform:uppercase">
+    Context &amp; coverage</h3>${rows}
+    <div style="margin:4px 0 14px">${lk}</div>`;
+}
+
+function renderPeer(p){
+  if(!p) return "";
+  const pct=Math.min(100,p.pct||0);
+  const col=pct>=95?"var(--s4)":pct>=80?"#f0883e":"var(--s1)";
+  return `<h3 style="color:var(--muted);font-size:12px;text-transform:uppercase">
+    vs. peers <span style="text-transform:none;font-weight:400">· ${p.n.toLocaleString()}
+    providers in group "${esc(p.group)}" with public $</span></h3>
+  <div class="bar"><span class="lab" style="width:120px">percentile P${pct}</span>
+    <span class="track"><span class="fill" style="width:${pct}%;background:${col}"></span></span>
+    <span class="val" style="width:auto">this: <b>${fmtMoney(p.mine)}</b> · median
+      ${fmtMoney(p.median)} · P90 ${fmtMoney(p.p90)}</span></div>
+  <div class="reasons" style="margin:2px 0 10px">${pct>=95?
+    "Far above peers — being an outlier is a lead to explain (large practice? unusual billing?), not a finding.":
+    pct>=80?"Above typical for this group.":"Within the normal range for this group."}</div>`;
+}
+function renderTimeline(t){
+  if(!t||((t.events||[]).length===0&&(t.payments||[]).length===0)) return "";
+  const W=860,H=150,L=20,R=20,base=96,maxBar=52;
+  const fy=d=>{const y=+d.slice(0,4),m=+d.slice(5,7)||1;return y+(m-1)/12;};
+  const yrs=[...(t.events||[]).map(e=>fy(e.date)),
+             ...(t.payments||[]).map(p=>p.year+0.5)];
+  if(t.bar_date) yrs.push(fy(t.bar_date));
+  let lo=Math.floor(Math.min(...yrs))-0.4, hi=Math.max(Math.max(...yrs)+0.6, 2026.4);
+  const x=v=>L+(v-lo)/(hi-lo)*(W-L-R);
+  const maxAmt=Math.max(1,...(t.payments||[]).map(p=>p.amount||0));
+  let s=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;background:var(--panel2);
+    border-radius:8px" xmlns="http://www.w3.org/2000/svg">`;
+  // year ticks
+  for(let y=Math.ceil(lo);y<=Math.floor(hi);y++){
+    s+=`<line x1="${x(y)}" y1="${base}" x2="${x(y)}" y2="${base+4}" stroke="var(--line)"/>
+        <text x="${x(y+0.5)}" y="${base+16}" font-size="10" fill="var(--muted)"
+        text-anchor="middle">${y}</text>`;
+  }
+  s+=`<line x1="${L}" y1="${base}" x2="${W-R}" y2="${base}" stroke="var(--line)"/>`;
+  // payment bars (per calendar/FY year)
+  const barAfter=t.bar_date?fy(t.bar_date):null;
+  for(const p of (t.payments||[])){
+    const h=Math.max(3,p.amount/maxAmt*maxBar), bw=Math.max(8,(x(1)-x(0))*0.5);
+    const cx=x(p.year+0.5), after=barAfter!==null&&p.year+0.5>barAfter;
+    s+=`<rect x="${cx-bw/2}" y="${base-h}" width="${bw}" height="${h}" rx="2"
+      fill="${after?'var(--s4)':'var(--s1)'}" opacity="${after?'0.95':'0.75'}">
+      <title>${p.year}: ${fmtMoney(p.amount)}${after?' — AFTER the bar date':''}</title></rect>`;
+    if((t.payments||[]).length<=9)
+      s+=`<text x="${cx}" y="${base-h-4}" font-size="9" fill="var(--muted)"
+        text-anchor="middle">${fmtMoney(p.amount)}</text>`;
+  }
+  // events
+  const KC={license:"var(--accent)",flag:"#f0883e",bar:"var(--s4)"};
+  let lane=0;
+  for(const ev of (t.events||[])){
+    const ex=x(fy(ev.date)), col=KC[ev.kind]||"var(--muted)";
+    s+=`<circle cx="${ex}" cy="${base}" r="4" fill="${col}">
+      <title>${esc(ev.label)} — ${ev.date}</title></circle>`;
+    const ty=118+(lane%2)*14; lane++;
+    s+=`<text x="${Math.min(Math.max(ex,40),W-60)}" y="${ty}" font-size="9.5"
+      fill="${col}" text-anchor="middle">${esc(ev.label)} ${ev.date.slice(0,7)}</text>`;
+  }
+  // the bar line — payments to its right are the contradiction
+  if(t.bar_date){
+    const bx=x(fy(t.bar_date));
+    s+=`<line x1="${bx}" y1="14" x2="${bx}" y2="${base}" stroke="var(--s4)"
+      stroke-width="2" stroke-dasharray="5,3"/>
+      <text x="${Math.min(Math.max(bx,60),W-90)}" y="10" font-size="10" font-weight="700"
+      fill="var(--s4)" text-anchor="middle">BARRED ${t.bar_date}</text>`;
+  }
+  s+="</svg>";
+  return `<h3 style="color:var(--muted);font-size:12px;text-transform:uppercase">
+    Timeline · payments vs. the bar date</h3>
+    <div class="reasons" style="margin:0 0 6px">green = $ per year · red bars = $ in years
+    after the bar line · dots: <span style="color:var(--accent)">license</span> /
+    <span style="color:#f0883e">action</span> /
+    <span style="color:var(--s4)">exclusion</span></div>${s}`;
+}
+
+async function openEntity(uid){
+  const e=await (await fetch("/api/entity?uid="+uid)).json();
+  if(e.error){return;}
+  const sc=e.score||{};
+  const flags=(e.flags||[]).map(f=>`
+    <div class="flagcard">
+      <span class="sev">+${f.severity}</span>
+      <div class="ft">${esc(f.title)} <span class="reasons">(${esc(f.rule_id)})</span></div>
+      <div>${esc(f.explanation)}</div>
+      <div class="fe">${Object.entries(f.evidence||{}).map(([k,v])=>
+        `<b>${esc(k)}:</b> ${esc(Array.isArray(v)?v.join("; "):v)}`).join(" &nbsp;|&nbsp; ")}</div>
+    </div>`).join("");
+  $("#modal").innerHTML=`
+    <span class="close" onclick="closeModal()">&times;</span>
+    <h2>${esc(e.name||"(unnamed)")} <span class="score"
+      style="background:${scoreColor(sc.risk_score)};font-size:14px">
+      ${sc.risk_score||0}</span></h2>
+    <div class="meta">${esc(e.entity_type||"")} &middot;
+      ${esc([e.address,e.city,e.state,e.zip].filter(Boolean).join(", "))} &middot;
+      status: ${esc(e.status||"?")}<br>
+      ${e.source_url?`<a href="${esc(e.source_url)}" target="_blank"
+        rel="noopener">↗ verify against source record (${esc(e.source)})</a>`:""}</div>
+    <div id="tri-bar" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+      margin:0 0 14px">
+      ${["escalated","reviewed","dismissed"].map(s=>`<button
+        class="tribtn ${(e.triage||{}).state===s?'on':''}" id="tri-${s}"
+        onclick="modalTriage('${encodeURIComponent(e.uid)}','${s}')">${
+        {escalated:"⚑ Escalate",reviewed:"✓ Reviewed",dismissed:"✕ Dismiss"}[s]}</button>`).join("")}
+      <button class="tribtn ${(e.triage||{}).watched?'on':''}" id="tri-watch"
+        onclick="modalTriage('${encodeURIComponent(e.uid)}',null,${(e.triage||{}).watched?0:1})">★ Watch</button>
+      <a class="tribtn" style="text-decoration:none" target="_blank" rel="noopener"
+        href="/casefile?uid=${encodeURIComponent(e.uid)}"
+        title="printable evidence packet: dossier, chronology, payments, sources, referral + PRA letter drafts">📄 Case file</a>
+      <input id="tri-note" placeholder="triage note… (saved on Enter)"
+        value="${esc((e.triage||{}).note||"")}" style="flex:1;min-width:180px;
+        background:var(--panel2);border:1px solid var(--line);color:var(--txt);
+        border-radius:6px;padding:6px 10px;font-size:12.5px"
+        onkeydown="if(event.key==='Enter'){modalTriage('${encodeURIComponent(e.uid)}',undefined,undefined,this.value);this.blur();}">
+    </div>
+    ${e.operator?`<div class="disclaimer" style="margin:0 0 14px;background:#11283a;
+      border-color:#2a5a8a;color:#bcd8f5">⛓ Part of operator
+      <b>${esc(e.operator.canonical_name)}</b> — ${e.operator.member_count} records
+      across ${e.operator.source_count} program(s), operator score
+      ${e.operator.combined_score}. <a style="cursor:pointer"
+      onclick="openOperator('${e.operator.operator_id}')">view operator →</a></div>`:""}
+    ${renderDossier(e.dossier)}
+    ${renderTimeline(e.timeline)}
+    ${renderPeer(e.peer)}
+    ${renderContext(e)}
+    ${(e.payments&&e.payments.length)?`<h3 style="color:var(--muted);font-size:12px;
+      text-transform:uppercase">Public funds surfaced · ${fmtMoney(e.funds_total)}</h3>
+      ${e.payments.map(p=>`<div class="flagcard" style="border-left-color:var(--s1)">
+        <span class="sev">${fmtMoney(p.amount)}</span>
+        <div class="ft">${esc(p.program)}</div>
+        <div class="fe">period: ${esc(p.period||'—')}${p.source_url?
+          ` · <a href="${esc(p.source_url)}" target="_blank" rel="noopener">source</a>`
+          :''}</div></div>`).join("")}`:""}
+    <h3 style="color:var(--muted);font-size:12px;text-transform:uppercase">
+      ${(e.flags||[]).length} flag(s) ${renderScoreParts(e.score_parts, sc.risk_score)}</h3>
+    ${flags||'<div class="reasons">No flags.</div>'}`;
+  $("#overlay").classList.add("open");
+  syncHash({uid:e.uid});
+}
+function renderScoreParts(parts, total){
+  if(!parts||!parts.length) return "";
+  const sum=parts.reduce((s,p)=>s+p.severity,0)||1;
+  const cols=["var(--s4)","#f0883e","#d29922","#4ea1ff","#8b9bab","#56d4dd"];
+  return `<span style="display:inline-flex;width:240px;height:10px;border-radius:5px;
+    overflow:hidden;vertical-align:middle;margin-left:10px" title="score = capped sum of
+the MAX severity in each independent signal group (correlated flags don't stack):
+${parts.map(p=>`${p.group}: +${p.severity} (${p.rule})`).join("\n")}">${
+    parts.map((p,i)=>`<span style="width:${(100*p.severity/sum)}%;
+      background:${cols[i%cols.length]}"></span>`).join("")}</span>
+    <span class="reasons" style="text-transform:none"> = ${total} (hover for breakdown)</span>`;
+}
+function closeModal(){ $("#overlay").classList.remove("open"); syncHash(); }
+$("#overlay").addEventListener("click",ev=>{ if(ev.target.id==="overlay") closeModal(); });
+document.addEventListener("keydown",ev=>{ if(ev.key==="Escape") closeModal(); });
+
+["f-source","f-rule","f-min","f-op","f-triage","f-sort"].forEach(id=>$("#"+id).addEventListener("change",loadFlags));
+
+// ---- omnibox + audit roulette ----
+let _omniT=null;
+$("#omni").addEventListener("input",()=>{
+  clearTimeout(_omniT);
+  _omniT=setTimeout(async()=>{
+    const q=$("#omni").value.trim();
+    const drop=$("#omni-drop");
+    if(q.length<2){ drop.style.display="none"; return; }
+    const d=await (await fetch("/api/search?q="+encodeURIComponent(q))).json();
+    const ents=(d.results||[]).map(r=>`<div class="omni-it" onclick="$('#omni-drop').style.display='none';openEntity('${encodeURIComponent(r.uid)}')">
+      ${esc(r.name||"(unnamed)")} <span class="reasons">· ${esc(r.source)}${r.city?(" · "+esc(r.city)):""}${
+      r.risk_score?(" · score "+r.risk_score):""}</span></div>`);
+    const ops=(d.operators||[]).map(o=>`<div class="omni-it" onclick="$('#omni-drop').style.display='none';openOperator('${o.operator_id}')">
+      ⛓ ${esc(o.canonical_name)} <span class="reasons">· operator · ${o.member_count} members · score ${o.combined_score}</span></div>`);
+    drop.innerHTML=[...ops,...ents].join("")||`<div class="omni-it reasons">no matches</div>`;
+    drop.style.display="block";
+  },220);
+});
+document.addEventListener("click",ev=>{
+  if(!ev.target.closest("#omni") && !ev.target.closest("#omni-drop"))
+    $("#omni-drop").style.display="none";
+});
+async function rouletteLead(){
+  const d=await (await fetch("/api/random")).json();
+  if(d.uid) openEntity(encodeURIComponent(d.uid));
+}
+
+// ---- what's new since the previous pipeline run ----
+const CH_ICON={new:"✦",risk:"▲",funds:"$",status:"≷"};
+async function loadChanges(){
+  const d=await (await fetch("/api/changes")).json();
+  if(!(d.items||[]).length){ $("#whatsnew").innerHTML=""; return; }
+  const when=(d.runs||[])[1]?`since ${esc(d.runs[1].slice(0,16).replace("T"," "))}`:"";
+  $("#whatsnew").innerHTML=`<div class="box" style="margin:0 0 16px">
+    <h3>What's new ${when}
+      <span style="text-transform:none;font-weight:400;color:var(--muted)">·
+      ${d.items.length} change(s) between the last two pipeline runs · ★ watched first</span></h3>
+    <div style="display:flex;flex-wrap:wrap;gap:6px">${d.items.map(it=>
+      `<span class="opbadge" style="cursor:pointer;${it.watched?'border-color:#d6a435;':''}"
+        onclick="openEntity('${encodeURIComponent(it.uid)}')"
+        title="${esc(it.detail)}">${it.watched?"★ ":""}${CH_ICON[it.kind]||"·"} ${esc(it.name)}
+        <span class="reasons">${esc(it.detail)}</span></span>`).join("")}</div></div>`;
+}
+
+// ---- movers + data health (funding tab) ----
+async function loadMovers(){
+  const d=await (await fetch("/api/movers")).json();
+  $("#movers").innerHTML=(d.growth||[]).map(g=>
+    `<div class="leg" style="cursor:pointer"
+      onclick="openEntity('${encodeURIComponent(g.uid)}')">${srcPill(g.source)}
+      ${esc(g.name)} <span class="reasons">${esc(g.detail)}</span></div>`).join("")
+    || '<span class="reasons">no multi-year growth outliers in provider $</span>';
+}
+function loadDataHealth(s){
+  const li=s.last_ingest||{}, es=s.entities_by_source||{};
+  $("#datahealth").innerHTML=`<table style="font-size:12px">
+    <thead><tr><th>source</th><th>records</th><th>last ingested</th></tr></thead><tbody>${
+    Object.keys(es).sort().map(k=>`<tr><td>${esc(k)}</td>
+      <td style="text-align:right">${es[k].toLocaleString()}</td>
+      <td>${esc((li[k]||"—").slice(0,16).replace("T"," "))}</td></tr>`).join("")}
+    </tbody></table>
+    <div class="reasons" style="margin-top:6px">Coverage windows per money source are on
+    the strip above; childcare subsidy + per-claim Medicaid remain records-request-only.</div>`;
+}
+
+// ---- deep links: filters + open modal serialized in the URL hash ----
+function syncHash(extra){
+  const h=new URLSearchParams();
+  const tab=["entities","operators","funding"].find(t=>$("#view-"+t).style.display!=="none");
+  if(tab&&tab!=="entities") h.set("tab",tab);
+  [["rule","f-rule"],["src","f-source"],["min","f-min"],["q","f-q"],
+   ["triage","f-triage"],["sort","f-sort"]].forEach(([k,id])=>{
+    const v=$("#"+id).value; if(v&&v!=="0"&&v!=="score") h.set(k,v); });
+  if(_county) h.set("county",_county);
+  if(extra&&extra.uid) h.set("uid",extra.uid);
+  if(extra&&extra.op) h.set("op",extra.op);
+  history.replaceState(null,"","#"+h.toString());
+}
+function applyHash(){
+  const h=new URLSearchParams(location.hash.slice(1));
+  if(h.get("tab")) showTab(h.get("tab"));
+  const m=[["rule","f-rule"],["src","f-source"],["min","f-min"],["q","f-q"],
+   ["triage","f-triage"],["sort","f-sort"]];
+  let touched=false;
+  m.forEach(([k,id])=>{ if(h.get(k)){ $("#"+id).value=h.get(k); touched=true; } });
+  if(h.get("county")){ _county=h.get("county"); touched=true; }
+  if(touched) loadFlags();
+  if(h.get("uid")) openEntity(encodeURIComponent(h.get("uid")));
+  else if(h.get("op")) openOperator(h.get("op"));
+}
+
+// ---- triage actions + keyboard review flow ----
+async function modalTriage(encUid, state, watched, note){
+  const uid=decodeURIComponent(encUid);
+  const patch={};
+  if(state!==undefined&&state!==null){
+    // clicking the active state again clears it (toggle)
+    const cur=document.querySelector("#tri-"+state);
+    patch.state = cur&&cur.classList.contains("on") ? "" : state;
+  }
+  if(watched!==undefined&&watched!==null) patch.watched=watched;
+  if(note!==undefined) patch.note=note;
+  const t=await setTriage(uid,patch);
+  ["escalated","reviewed","dismissed"].forEach(s=>{
+    const b=$("#tri-"+s); if(b) b.classList.toggle("on", t.state===s); });
+  const w=$("#tri-watch"); if(w) w.classList.toggle("on", !!t.watched);
+  loadFlags();
+}
+async function setTriage(uid, patch){
+  const res=await fetch("/api/triage",{method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(Object.assign({uid},patch))});
+  const t=await res.json();
+  const r=_qRows.find(x=>x.uid===uid);
+  if(r){ r.triage_state=t.state; r.triage_note=t.note; r.watched=t.watched; }
+  loadSummary();
+  return t;
+}
+function _selectRow(i){
+  if(!_qRows.length) return;
+  _qSel=Math.max(0,Math.min(_qRows.length-1,i));
+  document.querySelectorAll("#rows tr").forEach((tr,j)=>
+    tr.classList.toggle("selrow", j===_qSel));
+  const tr=$("#qrow-"+_qSel); if(tr) tr.scrollIntoView({block:"nearest"});
+}
+async function _triageSel(state){
+  if(_qSel<0||!_qRows[_qSel]) return;
+  const keep=_qSel;
+  await setTriage(_qRows[_qSel].uid,{state});
+  await loadFlags();            // refresh chips/filters, then restore position so a
+  _selectRow(keep);             // reviewer can rip through the queue with e/r/d
+}
+document.addEventListener("keydown",async ev=>{
+  if(ev.target.matches("input,textarea,select") || $("#overlay").style.display==="flex") return;
+  if($("#view-entities").style.display==="none") return;
+  if(ev.key==="j") _selectRow(_qSel+1);
+  else if(ev.key==="k") _selectRow(_qSel-1);
+  else if(ev.key==="Enter" && _qSel>=0) openEntity(encodeURIComponent(_qRows[_qSel].uid));
+  else if(ev.key==="e") _triageSel("escalated");
+  else if(ev.key==="r") _triageSel("reviewed");
+  else if(ev.key==="d") _triageSel("dismissed");
+  else if(ev.key==="u") _triageSel("");
+  else if(ev.key==="w" && _qSel>=0){ const r=_qRows[_qSel];
+    await setTriage(r.uid,{watched:r.watched?0:1}); loadFlags(); }
+});
+$("#f-q").addEventListener("input",()=>{ clearTimeout(debounce);
+  debounce=setTimeout(loadFlags,250); });
+
+// ---- operators (cross-source) ----
+const srcPill = s => `<span class="pill src-${esc(s)}">${esc(s)}</span>`;
+
+function renderAudit(a){
+  if(!a||!a.findings) return "";
+  const chip=(n,lab,col)=>n?`<span class="achip" style="border-color:${col};color:${col}">${n} ${lab}</span>`:"";
+  return `<div class="dossier" style="border-color:#d6a435;margin-bottom:14px">
+    <div class="dhead" style="color:#d6a435">⚖ Independent single-audit findings (FAC ${esc(a.audit_year)})</div>
+    <div class="ddet">${esc(a.auditee_name||"")} — ${a.findings} audit finding(s) on
+      ${fmtMoney(a.total_expended)} federal $ expended.
+      ${chip(a.questioned_costs,"questioned-cost","var(--s1)")}
+      ${chip(a.material_weakness,"material weakness","#f0883e")}
+      ${chip(a.modified_opinion,"modified opinion","#f0883e")}
+      ${chip(a.repeat_findings,"repeat","#f85149")}</div>
+    ${a.flagged_amount?`<div class="ddet" style="margin-top:6px"><b>${fmtMoney(a.flagged_amount)}</b>
+      in federal funds on programs that drew findings${a.flagged_programs&&a.flagged_programs.length?
+      `: <span class="reasons">${a.flagged_programs.map(esc).join("; ")}</span>`:""}.</div>`:""}
+    <div class="ddet" style="margin-top:6px"><a href="${esc(a.url)}" target="_blank"
+      rel="noopener">↗ view the audit on fac.gov</a> — an independent auditor's findings,
+      not our heuristic.</div>
+  </div>`;
+}
+
+let opFilter="";
+// why each LINK TYPE matters (hover on the link badge) — strongest evidence first
+const LINK_WHY={
+  hard:"Same registered owner or UBI on official filings — the strongest link type; these are verifiably under common control.",
+  dba:"The contract's own DBA field names the member facility — a documented vendor disclosure, not a name-similarity guess.",
+  shell:"Same registered agent or corporate officer in SOS filings — likely common control, but registered agents can also serve many unrelated companies.",
+  address:"Differently-named registrations at one address — same physical site; could be shells on one location or co-located programs. Registry filings settle it.",
+  geo:"Registered within ~50m of each other under different names/addresses — likely one physical operation registered multiple ways; verify on the ground.",
+  fuzzy:"Names match only approximately (spelling variants) — the weakest link type; confirm before treating as one operator.",
+  "cross-program":"The same person-name appears BOTH as a sanctioned credential holder and as a provider contact in another program — a name-only identity bridge until DOB/license confirms it.",
+  name:"Same normalized name across registrations — names collide; verify identity."};
+function opBadges(o){
+  const b=[];
+  if(o.contradiction_amount>0) b.push(`<span class="opbadge" style="border-color:var(--s4);
+    color:var(--s4);font-weight:700" title="dollars dated strictly AFTER a member was barred/excluded — the verifiable-contradiction slice of this operator's total">▲ ${fmtMoney(o.contradiction_amount)} after bar</span>`);
+  if(o.barred_members>0){
+    const unv = !(o.verified_adverse>0);
+    b.push(`<span class="opbadge" style="border-color:${unv?'#b08a3e':'#f85149'};
+      color:${unv?'#d6a435':'#f85149'}" title="${unv
+      ?'the barred member connects by PERSON-NAME only — identity NOT verified; could be a namesake'
+      :'members on an exclusion list or with a revoked/suspended credential — generally barred from public-program billing'}">⚠ ${o.barred_members} barred${unv?' (name-only)':''}</span>`);}
+  if(o.funds>0) b.push(`<span class="opbadge" style="border-color:var(--s1);
+    color:var(--s1)" title="total public $ surfaced across all members${o.funds_range?` (paid ${o.funds_range})`:''}">${fmtMoney(o.funds)} total${
+    o.funds_range?` <span style="opacity:.65;font-weight:400">· ${o.funds_range}</span>`:""}</span>`);
+  if(o.audit_findings>0) b.push(`<span class="opbadge" style="border-color:#d6a435;
+    color:#d6a435" title="independent single-audit findings (FAC) on this operator's federal programs">⚖ ${o.audit_findings} audit</span>`);
+  if(o.nonprofit_revoked) b.push(`<span class="opbadge" style="border-color:var(--s4);
+    color:var(--s4)" title="IRS auto-revoked this organization's tax-exempt status (${esc(o.nonprofit_revoked)}) for 3 years of non-filing — it presents as a nonprofit but the exemption is revoked">✗ 501(c) revoked</span>`);
+  const L={hard:"shared owner/UBI",dba:"contract DBA names facility",
+    shell:"shared agent/officer",address:"same address",
+    geo:"geo-proximate",fuzzy:"fuzzy name",name:"name","cross-program":"cross-program"};
+  if(o.strongest_link) b.push(`<span class="opbadge why" style="border-color:#2a5a8a;
+    color:#9cc4ef" title="${esc(LINK_WHY[o.strongest_link]||'strongest linking evidence')}">${L[o.strongest_link]||o.strongest_link}</span>`);
+  return b.join("");
+}
+async function loadOperators(){
+  const p=new URLSearchParams({min_sources:$("#o-min").value, q:$("#o-q").value,
+    sort:$("#o-sort").value, limit:300});
+  if(opFilter) p.append("filter", opFilter);
+  const d=await (await fetch("/api/operators?"+p)).json();
+  const rows=d.results||[];
+  $("#o-empty").style.display=rows.length?"none":"block";
+  $("#o-rows").innerHTML=rows.map((o,i)=>`
+    <tr onclick="openOperator('${o.operator_id}')">
+      <td>${i+1}</td>
+      <td><b>${esc(o.canonical_name||"(unnamed)")}</b></td>
+      <td>${(o.sources||[]).map(srcPill).join(" ")}</td>
+      <td>${o.member_count}</td>
+      <td><span class="score" style="background:${scoreColor(o.combined_score)}">
+        ${o.combined_score}</span></td>
+      <td class="reasons">${opBadges(o)}<div style="margin-top:3px">${
+        esc((o.signals||[]).find(s=>!/^\d+ linked/.test(s)) || (o.signals||[])[0] || "")}</div></td>
+    </tr>`).join("");
+}
+
+const ID_BADGE={"license-confirmed":["id ✓ license","var(--s1)"],
+  "dob-confirmed":["id ✓ DOB","var(--s1)"],"city-corroborated":["id ~ city","#d6a435"],
+  "exclusion-npi":["id ~ NPI","#d6a435"],"unique-name":["id ? name-only","var(--muted)"],
+  "license-mismatch":["id ✗ license","#f85149"],"dob-mismatch":["id ✗ DOB","#f85149"],
+  "city-mismatch":["id ✗ city","#f85149"],
+  "taxonomy-mismatch":["id ✗ specialty","#f85149"]};
+const SRC_COLOR={childcare:"#4ea1ff",healthcare:"#f0883e",contracts:"#8b9bab",
+  nursing:"#db61a2",hospice:"#56d4dd",home_health:"#3fb950",dialysis:"#c9a227",
+  aba:"#bc8cff",nemt:"#ff9e64",dme:"#7ee787"};
+const LINK_LABEL={hard:"shared owner / UBI",shell:"shared agent / officer",
+  address:"same address",geo:"geo-proximate",fuzzy:"fuzzy name match",
+  "cross-program":"cross-program name",name:"same name"};
+function opGraph(o){
+  const ms=o.members||[];
+  if(ms.length<2||ms.length>40) return "";
+  const W=640,H=Math.min(420,230+ms.length*6),cx=W/2,cy=H/2;
+  const R=Math.min(cx,cy)-64;
+  const linkCol={hard:"#3fb950",shell:"#d6a435",address:"#4ea1ff",geo:"#56d4dd",
+    fuzzy:"#8b9bab","cross-program":"#f0883e",name:"#8b9bab"}[o.strongest_link]||"#2a5a8a";
+  const soft=o.strongest_link==='fuzzy'||o.strongest_link==='geo'||o.strongest_link==='name';
+  const maxF=Math.max(1,...ms.map(m=>m.funds||0));
+  const showLabels=ms.length<=22;
+  let s=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:680px;
+    background:radial-gradient(ellipse at center, #18222e 0%, var(--panel2) 75%);
+    border-radius:10px" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+        <feGaussianBlur stdDeviation="3.2" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>`;
+  // curved edges: hub -> node, bowed perpendicular for a soft organic look
+  ms.forEach((m,i)=>{
+    const a=2*Math.PI*i/ms.length - Math.PI/2;
+    const x=cx+R*Math.cos(a), y=cy+R*Math.sin(a);
+    const mx=cx+R*0.5*Math.cos(a)+14*Math.cos(a+Math.PI/2),
+          my=cy+R*0.5*Math.sin(a)+14*Math.sin(a+Math.PI/2);
+    s+=`<path d="M ${cx} ${cy} Q ${mx.toFixed(1)} ${my.toFixed(1)} ${x.toFixed(1)} ${y.toFixed(1)}"
+      fill="none" stroke="${linkCol}" stroke-width="1.3" opacity="0.4"
+      ${soft?'stroke-dasharray="5,4"':''}/>`;
+  });
+  // nodes on top, labels staggered on two radii so neighbours don't collide
+  ms.forEach((m,i)=>{
+    const a=2*Math.PI*i/ms.length - Math.PI/2;
+    const x=cx+R*Math.cos(a), y=cy+R*Math.sin(a);
+    const r=6+9*Math.sqrt((m.funds||0)/maxF);
+    const col=SRC_COLOR[m.source]||'#8b9bab';
+    s+=`<g style="cursor:pointer" onclick="openEntity('${encodeURIComponent(m.entity_uid)}')">
+      <circle cx="${x}" cy="${y}" r="${r+3.5}" fill="${col}" opacity="0.18"/>
+      <circle cx="${x}" cy="${y}" r="${r}" fill="${col}" filter="url(#glow)"
+        stroke="${m.barred?'#f85149':'#0f1419'}" stroke-width="${m.barred?2.6:1.4}">
+        <title>${esc(m.name)} — ${esc(m.source)}${m.barred?' · BARRED':''}${
+          m.funds?(' · '+fmtMoney(m.funds)):''} (click to open)</title></circle>`;
+    if(m.barred) s+=`<text x="${x}" y="${y+3.5}" font-size="9" font-weight="800"
+      fill="#fff" text-anchor="middle" pointer-events="none">!</text>`;
+    if(showLabels){
+      const lr=R+(i%2?38:18);                       // stagger label rings
+      const lx=cx+lr*Math.cos(a), ly=cy+lr*Math.sin(a);
+      const anchor=Math.abs(Math.cos(a))<0.3?"middle":(Math.cos(a)>0?"start":"end");
+      s+=`<text x="${lx.toFixed(1)}" y="${(ly+3).toFixed(1)}" font-size="9"
+        fill="${m.barred?'#f8807a':'var(--muted)'}" text-anchor="${anchor}"
+        pointer-events="none">${esc((m.name||'').slice(0,18))}</text>`;
+    }
+    s+=`</g>`;
+  });
+  s+=`<circle cx="${cx}" cy="${cy}" r="11" fill="${linkCol}" filter="url(#glow)"/>
+    <circle cx="${cx}" cy="${cy}" r="16" fill="none" stroke="${linkCol}" opacity="0.35"/>
+    <text x="${cx}" y="${cy+30}" font-size="10.5" font-weight="700" fill="${linkCol}"
+      text-anchor="middle">${esc(LINK_LABEL[o.strongest_link]||o.strongest_link||'linked')}</text></svg>`;
+  return `<h3 style="color:var(--muted);font-size:12px;text-transform:uppercase">
+    Cluster map <span style="text-transform:none;font-weight:400">· these ${ms.length}
+    records resolve to one operator · node size = public $ · red ring + ! = barred ·
+    hub = the linking evidence (${esc(LINK_LABEL[o.strongest_link]||'link')}) · click a node</span></h3>${s}`;
+}
+
+async function openOperator(id){
+  const o=await (await fetch("/api/operator?id="+encodeURIComponent(id))).json();
+  if(o.error){return;}
+  const members=(o.members||[]).map(m=>{
+    const idb=ID_BADGE[m.identity];
+    return `<div class="flagcard" style="border-left-color:${m.barred?'#f85149':'var(--accent)'};cursor:pointer"
+      onclick="openEntity('${encodeURIComponent(m.entity_uid)}')">
+      <span class="sev">score ${Math.round(m.risk_score)}${m.funds?(" · "+fmtMoney(m.funds)):""}</span>
+      <div class="ft">${m.barred?'⚠ ':''}${srcPill(m.source)} ${esc(m.name)}${
+        idb?` <span class="achip" style="border-color:${idb[1]};color:${idb[1]}">${idb[0]}</span>`:''}</div>
+      <div class="fe">${esc(m.entity_type||"")}${m.status?(" · "+esc(m.status)):""}${
+        m.top_flag?` · <b>${esc(m.top_flag)}</b>`:''}</div>
+    </div>`;}).join("");
+  // risk-summary dossier
+  const sum=[];
+  if(o.contradiction_amount>0) sum.push(`<span class="achip" style="border-color:var(--s1);color:var(--s1)">▲ ${fmtMoney(o.contradiction_amount)} paid after barred</span>`);
+  if(o.barred_members>0) sum.push(`<span class="achip" style="border-color:#f85149;color:#f85149">⚠ ${o.barred_members} barred member(s)</span>`);
+  if(o.sanctioned_members>0) sum.push(`<span class="achip" style="border-color:#f0883e;color:#f0883e">${o.sanctioned_members} sanctioned</span>`);
+  if(o.nonprofit_revoked) sum.push(`<span class="achip" style="border-color:var(--s4);color:var(--s4)">✗ 501(c) revoked ${esc(o.nonprofit_revoked)}</span>`);
+  if(o.dollars_at_stake>0) sum.push(`<span class="achip" style="border-color:var(--muted);color:var(--muted)">${fmtMoney(o.dollars_at_stake)} at stake</span>`);
+  const strength=o.contradiction_amount>0?"var(--s1)":o.barred_members>0?"#f0883e":"var(--accent)";
+  const todo=(o.todo||[]).map(t=>`<li>${esc(t)}</li>`).join("");
+  $("#modal").innerHTML=`
+    <span class="close" onclick="closeModal()">&times;</span>
+    <h2>${esc(o.canonical_name)} <span class="score"
+      style="background:${scoreColor(o.combined_score)};font-size:14px">
+      ${o.combined_score}</span></h2>
+    <div class="meta">Cross-source operator · ${o.member_count} records across
+      ${o.source_count} program(s)${o.registry_status?
+        (" · registry status: "+esc(o.registry_status)):""}${
+        o.federal_funds?(" · federal awards "+fmtMoney(o.federal_funds)):""}${
+        o.nonprofit_ein?(" · IRS 990 nonprofit"+(o.nonprofit_revenue?
+          (" (rev "+fmtMoney(o.nonprofit_revenue)+")"):"")):""}
+      &nbsp; <a class="tribtn" style="text-decoration:none" target="_blank" rel="noopener"
+        href="/casefile?op=${encodeURIComponent(o.operator_id)}">📄 Case file</a></div>
+    <div class="dossier" style="border-color:${strength}">
+      <div class="dhead" style="color:${strength}">📋 Operator risk summary</div>
+      <div style="margin-bottom:8px">${sum.join(" ")||'<span class="reasons">No barred members or contradictions — clustered for review.</span>'}</div>
+      <div class="ddet"><b>Why linked:</b> ${(o.signals||[]).map(esc).join(" · ")}</div>
+      ${todo?`<div class="dcrwrap"><div class="dcr"><b style="color:var(--accent)">▸ What to verify</b><ul>${todo}</ul></div></div>`:''}
+    </div>
+    ${renderAudit(o.audit)}
+    ${opGraph(o)}
+    <h3 style="color:var(--muted);font-size:12px;text-transform:uppercase">
+      members · barred first (click to inspect)</h3>
+    ${members}`;
+  $("#overlay").classList.add("open");
+  syncHash({op:o.operator_id});
+}
+
+const PIE_COLORS=["#4ea1ff","#f0883e","#3fb950","#d29922","#f85149","#a371f7",
+  "#56d4dd","#8b9bab","#db61a2","#c9a227"];
+function renderDonut(elId, segs){
+  const el=$(elId);
+  const total=segs.reduce((s,x)=>s+(x.amount||0),0)||1;
+  let acc=0;
+  const stops=segs.map((x,i)=>{
+    const a=acc/total*360; acc+=x.amount||0; const b=acc/total*360;
+    return `${PIE_COLORS[i%PIE_COLORS.length]} ${a}deg ${b}deg`;}).join(",");
+  const legend=segs.map((x,i)=>`<div class="leg"><span class="sw"
+    style="background:${PIE_COLORS[i%PIE_COLORS.length]}"></span>${esc(x.label)}${
+    x.range?` <span class="reasons">· ${x.range}</span>`:""}
+    <b>${fmtMoney(x.amount)}</b> <span class="reasons">${(x.amount/total*100).toFixed(1)}%${
+    x.count?(" · "+x.count+" providers"):""}</span></div>`).join("");
+  el.innerHTML=`<div class="pie" style="background:conic-gradient(${stops})"></div>
+    <div class="legend">${legend||'<span class="reasons">no data</span>'}</div>`;
+}
+function renderBars(elId, rows){
+  const el=$(elId);
+  if(!rows||!rows.length){ el.innerHTML='<span class="reasons">no annual data yet — run multi-year payments</span>'; return; }
+  const max=Math.max(...rows.map(r=>r.amount||0))||1;
+  el.innerHTML=`<div class="ybars">${rows.map(r=>`
+    <div class="ybar"><div class="yval">${fmtMoney(r.amount)}</div>
+      <div class="yfill" style="height:${Math.max(4,(r.amount/max*150)).toFixed(0)}px"></div>
+      <div class="ylab">${esc(r.period)}</div></div>`).join("")}</div>`;
+}
+// WA's 39 counties on a tile grid (col,row) roughly matching geography
+const WA_TILES={"SAN JUAN":[1,0],"WHATCOM":[2,0],"OKANOGAN":[4,0],"FERRY":[5,0],
+  "STEVENS":[6,0],"PEND OREILLE":[7,0],
+  "CLALLAM":[0,1],"ISLAND":[1,1],"SKAGIT":[2,1],"SNOHOMISH":[3,1],"CHELAN":[4,1],
+  "DOUGLAS":[5,1],"LINCOLN":[6,1],"SPOKANE":[7,1],
+  "JEFFERSON":[0,2],"KITSAP":[1,2],"KING":[3,2],"KITTITAS":[4,2],"GRANT":[5,2],
+  "ADAMS":[6,2],"WHITMAN":[7,2],
+  "GRAYS HARBOR":[0,3],"MASON":[1,3],"PIERCE":[3,3],"YAKIMA":[4,3],"FRANKLIN":[5,3],
+  "COLUMBIA":[6,3],"GARFIELD":[7,3],"ASOTIN":[8,3],
+  "PACIFIC":[0,4],"THURSTON":[1,4],"LEWIS":[2,4],"BENTON":[5,4],"WALLA WALLA":[6,4],
+  "WAHKIAKUM":[0,5],"COWLITZ":[1,5],"CLARK":[2,5],"SKAMANIA":[3,5],"KLICKITAT":[4,5]};
+let _county="";
+function pickCounty(c){
+  _county = (_county===c) ? "" : c;
+  showTab("entities");
+  loadFlags();
+}
+async function loadCountyMap(){
+  const d=await (await fetch("/api/by_county")).json();
+  const by={}; (d.counties||[]).forEach(c=>{ by[c.county]=c; });
+  const max=Math.max(1,...Object.values(by).map(c=>c.hi||0));
+  const T=74,G=5,W=9*(T+G)+10,H=6*(T+G)+10;
+  let s=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:880px"
+    xmlns="http://www.w3.org/2000/svg">`;
+  for(const [name,[cx,cy]] of Object.entries(WA_TILES)){
+    const c=by[name]||{flagged:0,hi:0,funds:0};
+    const t=(c.hi||0)/max;
+    const fill=t===0?"var(--panel2)":
+      `rgb(${Math.round(60+195*t)},${Math.round(80-30*t)},${Math.round(70-20*t)})`;
+    const x=5+cx*(T+G), y=5+cy*(T+G);
+    s+=`<g style="cursor:pointer" onclick="pickCounty('${name}')">
+      <rect x="${x}" y="${y}" width="${T}" height="${T}" rx="6" fill="${fill}"
+        stroke="var(--line)"><title>${name}: ${c.hi||0} high-risk · ${c.flagged||0}
+ flagged · ${fmtMoney(c.funds||0)} public $ — click to filter the queue</title></rect>
+      <text x="${x+T/2}" y="${y+T/2-2}" font-size="9" fill="var(--txt)"
+        text-anchor="middle" pointer-events="none">${name.length>9?name.slice(0,8)+"…":name}</text>
+      <text x="${x+T/2}" y="${y+T/2+12}" font-size="10" font-weight="700"
+        fill="${t>0?'#fff':'var(--muted)'}" text-anchor="middle"
+        pointer-events="none">${c.hi||0}</text></g>`;
+  }
+  s+="</svg>";
+  $("#county-map").innerHTML=s;
+}
+async function loadFunding(){
+  const d=await (await fetch("/api/funds_breakdown")).json();
+  renderDonut("#fund-program", d.by_program||[]);
+  renderDonut("#fund-risk", d.by_risk_tier||[]);
+  renderBars("#fund-year", d.by_year||[]);
+  renderBars("#fund-fy", d.by_fy||[]);
+  loadCountyMap();
+  loadMovers();
+  // one-line coverage strip: when each money source starts/ends, so "old vs current"
+  // is never ambiguous
+  const cov=(d.by_program||[]).filter(x=>x.range&&x.amount>0).slice(0,8)
+    .map(x=>`${esc(x.label.replace(/WA state \(.*\)/,"WA state"))} <b>${x.range}</b>`);
+  $("#fund-coverage").innerHTML = cov.length?("Data coverage — "+
+    [...new Set(cov)].join(" · ")+" · contracts are FY snapshots (FY2022–FY2025)"):"";
+  // scope panel: live numbers from this scan vs rough statewide denominators, so an
+  // uninformed reader knows what fraction of the world this dashboard is looking at
+  const byP=d.by_program||[];
+  const contracts=(byP.find(x=>x.label==="WA agency contract")||{}).amount||0;
+  const yrs=(d.by_year||[]).slice(-3);
+  const provYr=yrs.length?yrs.reduce((s,x)=>s+x.amount,0)/yrs.length:0;
+  const fyRows=d.by_fy||[]; const fyLast=fyRows[fyRows.length-1]||{};
+  $("#fund-scope").innerHTML=`
+    <b>What's scanned:</b> WA-licensed childcare, DOH health-credential sanction records,
+    Medicare-certified facilities (nursing/hospice/home-health/dialysis), and NPPES
+    ABA / NEMT / DME orgs — provider categories chosen for public-fund exposure, plus WA
+    agency contracts (FY2022–FY2025). This is a <b>targeted scan of those groups, not an
+    audit of all Washington spending</b>.<br>
+    <b>What the dollars here are:</b> ${fmtMoney(contracts)} is <b>multi-year contract
+    value</b> (ceilings, not annual outlays). The annual money actually visible to this
+    scan is ≈ <b>${fmtMoney(provYr)}/yr</b> in Medicare+Medicaid provider payments and
+    <b>${fmtMoney(fyLast.amount||0)}</b> in WA-state payments (${esc(fyLast.period||"")}).<br>
+    <b>For scale (approximate, external):</b> Washington's operating budget is roughly
+    <a href="https://fiscal.wa.gov" target="_blank" rel="noopener">~$36B+/yr</a>; WA
+    Apple Health (Medicaid) alone spends roughly
+    <a href="https://www.hca.wa.gov" target="_blank" rel="noopener">~$20B/yr</a>; Medicare
+    spends roughly <a href="https://www.cms.gov/data-research/statistics-trends-and-reports/national-health-expenditure-data/state-residence"
+    target="_blank" rel="noopener">~$15B/yr in WA</a>. So the provider dollars visible
+    here are on the order of <b>1–2% of annual WA health-program spending</b> —
+    deliberately concentrated on the flagged provider types above.<br>
+    <b>What's NOT visible to anyone publicly:</b> per-claim Medicaid detail (restricted
+    research file), per-provider childcare subsidy (records request to DCYF),
+    institutional/hospital claims in the Medicaid file (~37% of Medicaid spend,
+    excluded at the source), and managed-care amounts carry known quality caveats.`;
+}
+
+function showTab(name){
+  ["entities","operators","funding"].forEach(t=>{
+    $("#view-"+t).style.display = (t===name)?"":"none";
+    $("#tab-"+t).classList.toggle("active", t===name);
+  });
+  if(name==="operators" && !window._opsLoaded){ window._opsLoaded=true; loadOperators(); }
+  if(name==="funding" && !window._fundLoaded){ window._fundLoaded=true; loadFunding(); }
+}
+$("#o-min").addEventListener("change",loadOperators);
+$("#o-sort").addEventListener("change",loadOperators);
+$("#o-chips").addEventListener("click",ev=>{
+  const b=ev.target.closest(".chip"); if(!b) return;
+  opFilter=b.dataset.f||"";
+  [...$("#o-chips").children].forEach(c=>c.classList.toggle("active",c===b));
+  loadOperators();
+});
+$("#o-q").addEventListener("input",()=>{ clearTimeout(debounce);
+  debounce=setTimeout(loadOperators,250); });
+
+loadSummary(); loadFlags(); loadChanges(); applyHash();
+</script>
+</body>
+</html>

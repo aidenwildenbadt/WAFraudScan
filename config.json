@@ -1,0 +1,496 @@
+{
+  "socrata_domain": "data.wa.gov",
+  "score_cap": 100,
+  "sources": {
+    "childcare": {
+      "dataset_id": "was8-3ni8",
+      "enabled": true,
+      "description": "DCYF Licensed Childcare Center and School Age Program Providers"
+    },
+    "contracts": {
+      "dataset_id": "pwse-3zea",
+      "enabled": true,
+      "description": "Agency Contracts (Fiscal Year 2022)"
+    },
+    "contracts_2023": {
+      "kind": "contracts",
+      "dataset_id": "mz6y-pfem",
+      "enabled": true,
+      "rules_profile": "contracts",
+      "description": "Agency Contracts (Fiscal Year 2023)"
+    },
+    "contracts_2024": {
+      "kind": "contracts",
+      "dataset_id": "s8d5-pj78",
+      "enabled": true,
+      "rules_profile": "contracts",
+      "description": "Agency Contracts (Fiscal Year 2024)"
+    },
+    "contracts_2025": {
+      "kind": "contracts",
+      "dataset_id": "6fx9-ncas",
+      "enabled": true,
+      "rules_profile": "contracts",
+      "description": "Agency Contracts (Fiscal Year 2025)"
+    },
+    "healthcare": {
+      "dataset_id": "qxh8-f4bd",
+      "enabled": true,
+      "description": "DOH Health Care Provider Credential Data (sanction-screening slice)",
+      "where": "actiontaken in ('Yes','Pending') OR status in ('Suspended','Revoked','Surrender','Voluntary Surrender','Active With Conditions','Terminated')"
+    },
+    "hospice": {
+      "kind": "cms_provider",
+      "enabled": true,
+      "state": "WA",
+      "rules_profile": "facility",
+      "type_label": "HOSPICE",
+      "dataset_id": "dedd5605-53bb-5382-8761-a17901259f4a",
+      "description": "CMS Hospice Providers (WA, federal Medicare-certified)",
+      "map": {
+        "id": "cms_certification_number_ccn",
+        "name": "facility_name",
+        "address": "address_line_1",
+        "city": "citytown",
+        "state": "state",
+        "zip": "zip_code",
+        "county": "countyparish",
+        "ownership": "ownership_type",
+        "cert_date": "certification_date"
+      }
+    },
+    "home_health": {
+      "kind": "cms_provider",
+      "enabled": true,
+      "state": "WA",
+      "rules_profile": "facility",
+      "type_label": "HOME HEALTH AGENCY",
+      "dataset_id": "d59bc3f6-0086-526b-a640-26b7dac7e575",
+      "description": "CMS Home Health Agencies (WA, federal Medicare-certified)",
+      "map": {
+        "id": "cms_certification_number_ccn",
+        "name": "provider_name",
+        "address": "address",
+        "city": "citytown",
+        "state": "state",
+        "zip": "zip_code",
+        "ownership": "type_of_ownership",
+        "cert_date": "certification_date"
+      }
+    },
+    "dialysis": {
+      "kind": "cms_provider",
+      "enabled": true,
+      "state": "WA",
+      "rules_profile": "facility",
+      "type_label": "DIALYSIS FACILITY",
+      "dataset_id": "bd6d011d-7e7e-5964-be9a-a0bbf4010e6c",
+      "description": "CMS Dialysis Facilities (WA, federal Medicare-certified)",
+      "map": {
+        "id": "cms_certification_number_ccn",
+        "name": "facility_name",
+        "address": "address_line_1",
+        "city": "citytown",
+        "state": "state",
+        "zip": "zip_code",
+        "county": "countyparish",
+        "ownership": "profit_or_nonprofit",
+        "cert_date": "certification_date"
+      }
+    },
+    "nursing": {
+      "kind": "cms_provider",
+      "enabled": true,
+      "state": "WA",
+      "rules_profile": "facility",
+      "type_label": "SKILLED NURSING FACILITY",
+      "dataset_id": "8ad3f28f-7733-5626-9c24-6efbe54280a4",
+      "description": "CMS Skilled Nursing Facilities (WA)",
+      "map": {
+        "id": "cms_certification_number_ccn",
+        "name": "provider_name",
+        "address": "address_line_1",
+        "city": "citytown",
+        "state": "state",
+        "zip": "zip_code",
+        "county": "countyparish"
+      }
+    },
+    "aba": {
+      "kind": "nppes",
+      "enabled": true,
+      "state": "WA",
+      "entity_kind": "org",
+      "cap": 2000,
+      "rules_profile": "facility",
+      "type_label": "ABA / AUTISM (BEHAVIOR ANALYST)",
+      "description": "NPPES Behavior Analyst orgs (WA, autism/ABA therapy)",
+      "taxonomies": [
+        "Behavior Analyst"
+      ]
+    },
+    "nemt": {
+      "kind": "nppes",
+      "enabled": true,
+      "state": "WA",
+      "entity_kind": "org",
+      "cap": 2000,
+      "rules_profile": "facility",
+      "type_label": "NON-EMERGENCY MEDICAL TRANSPORT",
+      "description": "NPPES Non-emergency Medical Transport (WA)",
+      "taxonomies": [
+        "Non-emergency Medical Transport (VAN)"
+      ]
+    },
+    "dme": {
+      "kind": "nppes",
+      "enabled": true,
+      "state": "WA",
+      "entity_kind": "org",
+      "cap": 2000,
+      "rules_profile": "facility",
+      "type_label": "DURABLE MEDICAL EQUIPMENT",
+      "description": "NPPES Durable Medical Equipment & Supplies (WA)",
+      "taxonomies": [
+        "Durable Medical Equipment & Medical Supplies"
+      ]
+    }
+  },
+  "registry": {
+    "csv_glob": "data/registry/*.csv",
+    "active_values": [
+      "ACTIVE",
+      "OPEN",
+      "ACTIVE/COMPLIANCE",
+      "GOOD STANDING"
+    ],
+    "name_columns": null,
+    "status_column": null
+  },
+  "resolve": {
+    "max_key_members": 8,
+    "fuzzy_threshold": 0.9,
+    "fuzzy_max_block": 40,
+    "geo_radius_m": 50,
+    "geo_max_cell": 15
+  },
+  "screening": {
+    "enabled": true,
+    "state": "WA"
+  },
+  "ownership": {
+    "enabled": true,
+    "state": "WA"
+  },
+  "legitimacy": {
+    "institutional_suppression": 0.5
+  },
+  "nursing_enforcement": {
+    "enabled": true,
+    "state": "WA"
+  },
+  "childcare_enforcement": {
+    "enabled": true
+  },
+  "external": {
+    "enabled": true,
+    "state": "WA",
+    "max_operators": 250
+  },
+  "crosswalk": {
+    "enabled": true,
+    "state": "WA",
+    "cap": 500
+  },
+  "payments": {
+    "medicare_dme": {
+      "enabled": true,
+      "join_source": "dme",
+      "state": "WA",
+      "program": "Medicare DME",
+      "npi_field": "Suplr_NPI",
+      "state_field": "Suplr_Prvdr_State_Abrvtn",
+      "amount_field": "Suplr_Mdcr_Pymt_Amt",
+      "years": {
+        "2023": "a2d56d3f-3531-4315-9d87-e29986516b41",
+        "2022": "471f9c0d-12c4-4601-a547-559dcfa2d0e2"
+      }
+    },
+    "medicare_partb": {
+      "enabled": true,
+      "join_source": [
+        "healthcare"
+      ],
+      "state": "WA",
+      "program": "Medicare Part B",
+      "npi_field": "Rndrng_NPI",
+      "state_field": "Rndrng_Prvdr_State_Abrvtn",
+      "amount_field": "Tot_Mdcr_Pymt_Amt",
+      "years": {
+        "2015": "fb870c06-27f2-4e15-b556-1731d794bb5b",
+        "2016": "2691839a-99fb-45a1-9bd9-86905ba975cc",
+        "2017": "44ea2789-993f-4d55-ac44-ed7f160b58fa",
+        "2018": "900850df-c9a9-47ce-a9e0-d0ceae5a811f",
+        "2023": "8ba584c6-a43a-4b0b-a35a-eb9a59e3a571",
+        "2022": "21555c17-ec1b-4e74-b2c6-925c6cbb3147",
+        "2021": "44e0a489-666c-4ea4-a1a2-360b6cdc19db",
+        "2020": "29d799aa-c660-44fe-a51a-72c4b3e661ac",
+        "2019": "6a53afe5-1cbc-4b33-9dc8-926ee532dc66",
+        "2024": "4d0b2df0-1e99-4db7-a574-a571d99217f1"
+      }
+    },
+    "medicare_partd": {
+      "enabled": true,
+      "join_source": [
+        "healthcare"
+      ],
+      "state": "WA",
+      "program": "Medicare Part D (drugs)",
+      "npi_field": "PRSCRBR_NPI",
+      "state_field": "Prscrbr_State_Abrvtn",
+      "amount_field": "Tot_Drug_Cst",
+      "years": {
+        "2013": "93645ea4-1a3f-4444-95c5-c109e6a4b267",
+        "2014": "8c3806d2-0692-4564-ab38-7bc19206521c",
+        "2015": "2aa87eb6-6555-42fa-a51d-4a332ab7d5e8",
+        "2016": "9c3eb417-a310-42d2-8065-9e2129e6a680",
+        "2017": "dc524dbb-6115-48c9-a4dc-aa4fb0d21b69",
+        "2018": "a422bf49-e5b3-429a-862f-723db5e15704",
+        "2023": "6428fad7-4fb1-454c-93a4-772934d73922",
+        "2022": "bed99012-c527-4d9d-92ea-67ec2510abea",
+        "2021": "3f7ab9ce-6fb6-4e6b-9af3-b681f2d3a95e",
+        "2020": "ed6548c1-c905-4fdf-84cc-1c897ca6210d",
+        "2019": "007f61da-2c20-4c80-90a5-88be67c8d022",
+        "2024": "f291bfd2-d107-4312-be87-fccd7cf127cc"
+      }
+    }
+  },
+  "rules": {
+    "global": {
+      "excluded_or_sanctioned": {
+        "severity_npi": 40,
+        "severity_npi_mandatory": 48,
+        "severity_corroborated": 30,
+        "severity_name": 20
+      },
+      "payment_anomaly": {
+        "spike_ratio": 2.0,
+        "spike_severity": 14,
+        "outlier_severity": 12,
+        "outlier_min": 100000
+      },
+      "paid_while_sanctioned": {
+        "severity": 35,
+        "severity_after": 50,
+        "max_gap_years": 6,
+        "min_barred_year": 2006
+      },
+      "billing_forensics": {
+        "dominance_share": 0.85,
+        "dominance_min": 50000,
+        "dominance_severity": 16,
+        "services_per_day": 10,
+        "services_per_day_severity": 14
+      },
+      "paid_after_npi_deactivated": {
+        "severity": 45
+      },
+      "debarred_contractor": {
+        "severity": 22,
+        "severity_contract_during": 40,
+        "strike_severity": 10,
+        "min_name_len": 7
+      }
+    },
+    "childcare": {
+      "license_expired_active": {
+        "severity": 30
+      },
+      "shared_contact_multiple_providers": {
+        "severity": 22,
+        "max_cluster": 8
+      },
+      "address_shared_multiple_providers": {
+        "severity_2": 14,
+        "severity_3plus": 24
+      },
+      "concentration_same_contact_person": {
+        "severity": 12,
+        "min_facilities": 3,
+        "max_facilities": 10
+      },
+      "capacity_outlier_high": {
+        "severity": 16,
+        "zscore": 3.0,
+        "min_sample": 20
+      },
+      "recent_license_high_capacity": {
+        "severity": 12,
+        "days": 365,
+        "capacity_percentile": 90
+      },
+      "capacity_missing_or_zero": {
+        "severity": 10
+      },
+      "missing_contact_info": {
+        "severity": 8
+      },
+      "ungeocoded_address": {
+        "severity": 5
+      },
+      "payment_only_certificate": {
+        "severity": 5
+      },
+      "misspelled_word_in_name": {
+        "severity": 8,
+        "common_min": 25,
+        "rare_max": 3,
+        "min_len": 5
+      },
+      "no_active_business_registration": {
+        "severity_not_found": 12,
+        "severity_inactive": 20
+      },
+      "childcare_enforcement": {
+        "severity_complaint": 18,
+        "severity_per_extra": 6,
+        "severity_max": 34,
+        "inspection_min": 6,
+        "inspection_severity": 6
+      }
+    },
+    "contracts": {
+      "contract_duplicate_amount_vendor": {
+        "severity": 14,
+        "min_amount": 5000
+      },
+      "contract_round_large_amount": {
+        "severity": 6,
+        "min_amount": 100000,
+        "round_to": 10000
+      },
+      "no_active_business_registration": {
+        "severity_not_found": 10,
+        "severity_inactive": 18
+      }
+    },
+    "healthcare": {
+      "credential_revoked_or_suspended": {
+        "severity": 30
+      },
+      "disciplinary_action_taken": {
+        "severity": 22
+      },
+      "credential_active_with_conditions": {
+        "severity": 18
+      },
+      "credential_surrendered": {
+        "severity": 16
+      },
+      "disciplinary_action_pending": {
+        "severity": 12
+      }
+    },
+    "hospice": {
+      "address_shared_multiple_providers": {
+        "severity_2": 16,
+        "severity_3plus": 26
+      },
+      "recently_certified": {
+        "severity": 8,
+        "days": 365
+      },
+      "for_profit_ownership": {
+        "severity": 5
+      },
+      "shared_owner": {
+        "severity": 16,
+        "min_facilities": 2
+      }
+    },
+    "home_health": {
+      "address_shared_multiple_providers": {
+        "severity_2": 16,
+        "severity_3plus": 26
+      },
+      "recently_certified": {
+        "severity": 8,
+        "days": 365
+      },
+      "for_profit_ownership": {
+        "severity": 5
+      },
+      "shared_owner": {
+        "severity": 16,
+        "min_facilities": 2
+      }
+    },
+    "dialysis": {
+      "address_shared_multiple_providers": {
+        "severity_2": 14,
+        "severity_3plus": 22
+      },
+      "recently_certified": {
+        "severity": 8,
+        "days": 365
+      },
+      "for_profit_ownership": {
+        "severity": 4
+      }
+    },
+    "aba": {
+      "address_shared_multiple_providers": {
+        "severity_2": 14,
+        "severity_3plus": 24
+      }
+    },
+    "nemt": {
+      "address_shared_multiple_providers": {
+        "severity_2": 16,
+        "severity_3plus": 26
+      }
+    },
+    "dme": {
+      "address_shared_multiple_providers": {
+        "severity_2": 16,
+        "severity_3plus": 26
+      }
+    },
+    "nursing": {
+      "address_shared_multiple_providers": {
+        "severity_2": 16,
+        "severity_3plus": 26
+      },
+      "ownership_churn": {
+        "severity": 14
+      },
+      "shared_owner": {
+        "severity": 16,
+        "min_facilities": 2
+      },
+      "nursing_enforcement": {
+        "fine_min": 10000,
+        "fine_severity": 16,
+        "jeopardy_severity": 22,
+        "deficiency_min": 25,
+        "deficiency_severity": 8
+      }
+    }
+  },
+  "npi_deactivation": {
+    "enabled": true
+  },
+  "irs_revocation": {
+    "enabled": true
+  },
+  "lni_debar": {
+    "enabled": true
+  },
+  "oig_cia": {
+    "enabled": true
+  },
+  "courtlistener": {
+    "enabled": true,
+    "max_lookups": 25
+  }
+}
