@@ -2,13 +2,13 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/((?!_vercel/).*)",
       "destination": "/api/index"
     }
   ],
   "functions": {
     "api/index.py": {
-      "excludeFiles": "{data/**,tests/**,.pytest_cache/**,.claude/**,**/__pycache__/**,**/*.pyc}"
+      "excludeFiles": "{data/**,deploy/*.db,tests/**,.pytest_cache/**,.claude/**,**/__pycache__/**,**/*.pyc}"
     }
   }
 }
