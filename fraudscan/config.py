@@ -3,7 +3,7 @@ import json
 import os
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATA_DIR = os.path.join(ROOT, "data")
+DATA_DIR = os.environ.get("FRAUDSCAN_DATA_DIR", os.path.join(ROOT, "data"))
 DB_PATH = os.path.join(DATA_DIR, "fraudscan.db")
 CONFIG_PATH = os.path.join(ROOT, "config.json")
 

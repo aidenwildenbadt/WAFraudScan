@@ -97,6 +97,14 @@ python3 -m unittest discover -s tests        # run the test suite
 An optional `SOCRATA_APP_TOKEN` env var raises Socrata's rate limits (not required for
 these dataset sizes).
 
+## Vercel deployment
+
+The repo includes `app.py`, a dependency-free WSGI adapter for Vercel's Python
+runtime. On Vercel, FraudScan stores its SQLite runtime state under `/tmp` via
+`FRAUDSCAN_DATA_DIR`, so the deployed dashboard starts empty until data is ingested or
+a database is attached. The local workflow above is still the canonical way to build a
+fully populated review queue.
+
 ## How it works
 
 ```
